@@ -17,6 +17,7 @@ None.
 - 2026-10-24: Code is hosted on GitHub; tasks are tracked in GitHub Issues.
 - 2026-10-24: Backend runs on Google Cloud Run.
 - 2026-10-24: Frontend is React, served by the Cloud Run backend (single container, same origin). Revisit a CDN (e.g. Firebase Hosting) if needed later.
+- 2026-10-24: Text files use LF line endings, in the repo and on disk, on every OS. Enforced by `.gitattributes` (`* text=auto eol=lf`).
 
 ## Phase 1 — Foundation
 - [ ] `package.json`, `.gitignore`, `.env.example`
