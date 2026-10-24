@@ -3,23 +3,26 @@
 Hand-off file between sessions. Keep it current.
 
 ## Next step
-Resolve the **Open decisions** below with the human, record the answers in **Decisions**, then start Phase 1.
+Phase 1: `package.json`, `.gitignore`, `.env.example`.
 
 ## Open decisions
-- [ ] App type: web frontend, Node backend, full-stack, CLI, other?
-- [ ] TypeScript or plain JavaScript? (recommended: TypeScript)
-- [ ] Hosting: GitHub? (needed for CI / PR workflow)
-- [ ] How Claude and Gemini split work: by role (build/review), by area, or free?
-- [ ] Task tracking: GitHub Issues or a `docs/tasks/` folder?
+None.
 
 ## Decisions
 - 2026-10-24: `AGENTS.md` is the single source of agent instructions; `CLAUDE.md`/`GEMINI.md` point to it.
 - 2026-10-24: Default branch is `main`; work happens on per-task branches.
+- 2026-10-24: App type is full-stack.
+- 2026-10-24: Language is TypeScript.
+- 2026-10-24: No fixed work split between Claude and Gemini.
+- 2026-10-24: Code is hosted on GitHub; tasks are tracked in GitHub Issues.
+- 2026-10-24: Backend runs on Google Cloud Run.
+- 2026-10-24: Frontend is React, served by the Cloud Run backend (single container, same origin). Revisit a CDN (e.g. Firebase Hosting) if needed later.
+- 2026-10-24: Text files use LF line endings, in the repo and on disk, on every OS. Enforced by `.gitattributes` (`* text=auto eol=lf`).
 
 ## Phase 1 — Foundation
 - [ ] `package.json`, `.gitignore`, `.env.example`
 - [ ] `CHANGELOG.md` (Keep a Changelog format) + rule in `AGENTS.md` to update it with every user-facing change
-- [ ] TypeScript config (if chosen)
+- [ ] TypeScript config
 - [ ] ESLint + Prettier
 - [ ] Test runner (Vitest) with one passing test
 - [ ] Add install/test/lint/build commands to `AGENTS.md`
