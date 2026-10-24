@@ -3,7 +3,7 @@
 Hand-off file between sessions. Keep it current.
 
 ## Next step
-Phase 1: `package.json`, `.gitignore`, `.env.example`.
+Phase 1: scaffold the `apps/web` and `apps/server` workspaces.
 
 ## Open decisions
 None.
@@ -18,9 +18,13 @@ None.
 - 2026-10-24: Backend runs on Google Cloud Run.
 - 2026-10-24: Frontend is React, served by the Cloud Run backend (single container, same origin). Revisit a CDN (e.g. Firebase Hosting) if needed later.
 - 2026-10-24: Text files use LF line endings, in the repo and on disk, on every OS. Enforced by `.gitattributes` (`* text=auto eol=lf`).
+- 2026-10-24: Monorepo with npm workspaces: `apps/web` (React), `apps/server` (backend), `packages/*` for shared code.
+- 2026-10-24: Package manager is npm.
+- 2026-10-24: Target Node 24 LTS (`.nvmrc`, `engines` in `package.json`).
 
 ## Phase 1 — Foundation
-- [ ] `package.json`, `.gitignore`, `.env.example`
+- [x] `package.json`, `.gitignore`, `.env.example`
+- [ ] Scaffold `apps/web` and `apps/server` workspaces (empty packages, no dependencies yet)
 - [ ] `CHANGELOG.md` (Keep a Changelog format) + rule in `AGENTS.md` to update it with every user-facing change
 - [ ] TypeScript config
 - [ ] ESLint + Prettier

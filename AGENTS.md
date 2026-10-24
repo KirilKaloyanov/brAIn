@@ -4,7 +4,8 @@ Shared instructions for all AI agents (Claude, Gemini) working in this repo.
 `CLAUDE.md` and `GEMINI.md` only point here — keep rules in this file.
 
 ## Project
-brAIn — a JavaScript app. Stack and scope are not decided yet; see `docs/ROADMAP.md`.
+brAIn — a full-stack TypeScript app: React frontend served by a Node backend on Google Cloud Run.
+npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Scope is not defined yet; see `docs/ROADMAP.md`.
 
 ## Start of every session
 1. Read this file.
