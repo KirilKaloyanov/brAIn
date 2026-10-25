@@ -18,4 +18,5 @@ npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Scope 
 - Never commit directly to `main`. Branch per task: `claude/<topic>` or `gemini/<topic>`.
 - Use Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …).
 - Update docs in the same change as the code they describe.
+- Add an entry under `## [Unreleased]` in `CHANGELOG.md` for every user-facing change, in the same change. Internal work (tooling, refactors, docs for agents) needs no entry.
 - Ask the human before adding dependencies or making decisions listed under **Open decisions**.
