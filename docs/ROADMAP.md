@@ -3,7 +3,7 @@
 Hand-off file between sessions. Keep it current.
 
 ## Next step
-Phase 1: scaffold the `apps/web` and `apps/server` workspaces.
+Phase 1: add `CHANGELOG.md` (Keep a Changelog format) and the rule in `AGENTS.md` to update it.
 
 ## Open decisions
 None.
@@ -21,10 +21,11 @@ None.
 - 2026-10-24: Monorepo with npm workspaces: `apps/web` (React), `apps/server` (backend), `packages/*` for shared code.
 - 2026-10-24: Package manager is npm.
 - 2026-10-24: Target Node 24 LTS (`.nvmrc`, `engines` in `package.json`).
+- 2026-10-25: Workspace packages use the `@brain/` scope (`@brain/web`, `@brain/server`).
 
 ## Phase 1 — Foundation
 - [x] `package.json`, `.gitignore`, `.env.example`
-- [ ] Scaffold `apps/web` and `apps/server` workspaces (empty packages, no dependencies yet)
+- [x] Scaffold `apps/web` and `apps/server` workspaces (empty packages, no dependencies yet)
 - [ ] `CHANGELOG.md` (Keep a Changelog format) + rule in `AGENTS.md` to update it with every user-facing change
 - [ ] TypeScript config
 - [ ] ESLint + Prettier
