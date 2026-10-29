@@ -22,6 +22,7 @@ Run from the repo root. Each runs across all workspaces.
 | Test      | `npm test` (single run) / `npm run test:watch` |
 
 Before proposing a commit, run `typecheck`, `lint`, `format:check` and `test`.
+A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on staged files; it does not run typecheck or tests. Do not bypass it with `--no-verify`.
 
 ## Start of every session
 
