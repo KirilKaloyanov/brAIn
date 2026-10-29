@@ -8,6 +8,21 @@ Shared instructions for all AI agents (Claude, Gemini) working in this repo.
 brAIn — a full-stack TypeScript app: React frontend served by a Node backend on Google Cloud Run.
 npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Scope is not defined yet; see `docs/ROADMAP.md`.
 
+## Commands
+
+Run from the repo root. Each runs across all workspaces.
+
+| Task      | Command                                        |
+| --------- | ---------------------------------------------- |
+| Install   | `npm install`                                  |
+| Build     | `npm run build` (server → `apps/server/dist`)  |
+| Typecheck | `npm run typecheck`                            |
+| Lint      | `npm run lint`                                 |
+| Format    | `npm run format` / `npm run format:check`      |
+| Test      | `npm test` (single run) / `npm run test:watch` |
+
+Before proposing a commit, run `typecheck`, `lint`, `format:check` and `test`.
+
 ## Start of every session
 
 1. Read this file.
