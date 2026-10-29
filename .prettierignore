@@ -1,0 +1,2 @@
+# Generated files (Prettier already skips node_modules and anything in .gitignore)
+package-lock.json
