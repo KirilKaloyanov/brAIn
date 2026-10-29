@@ -3,12 +3,15 @@
 Hand-off file between sessions. Keep it current.
 
 ## Next step
-Phase 1: ESLint + Prettier.
+
+Phase 1: Test runner (Vitest) with one passing test.
 
 ## Open decisions
+
 None.
 
 ## Decisions
+
 - 2026-10-24: `AGENTS.md` is the single source of agent instructions; `CLAUDE.md`/`GEMINI.md` point to it.
 - 2026-10-24: Default branch is `main`; work happens on per-task branches.
 - 2026-10-24: App type is full-stack.
@@ -24,17 +27,22 @@ None.
 - 2026-10-25: Workspace packages use the `@brain/` scope (`@brain/web`, `@brain/server`).
 - 2026-10-25: `CHANGELOG.md` follows Keep a Changelog 1.1.0 and SemVer; only user-facing changes get entries. Foundation work so far is internal, so `[Unreleased]` starts empty.
 - 2026-10-25: TypeScript 6.x (root devDependency). Shared strict options in `tsconfig.base.json`; each app extends it. Server uses `NodeNext` and compiles with `tsc` to `apps/server/dist` (run as `node dist/index.js`). Web uses `Bundler` resolution with `noEmit`, ready for Vite. `npm run typecheck` at the root checks every workspace.
+- 2026-10-29: ESLint 10 with one root flat config (`eslint.config.js`): `@eslint/js` recommended + `typescript-eslint` recommended type-checked rules (`projectService` picks each file's nearest tsconfig). React lint plugins wait until React is added. `npm run lint` at the root.
+- 2026-10-29: Prettier 3 formats every file (`.prettierrc.json`: single quotes, semicolons, trailing commas, print width 100). `eslint-config-prettier` turns off ESLint rules that clash with it. `npm run format` / `npm run format:check`.
+- 2026-10-29: `@types/node` is also a root devDependency, for root-level config files like `eslint.config.js`.
 
 ## Phase 1 — Foundation
+
 - [x] `package.json`, `.gitignore`, `.env.example`
 - [x] Scaffold `apps/web` and `apps/server` workspaces (empty packages, no dependencies yet)
 - [x] `CHANGELOG.md` (Keep a Changelog format) + rule in `AGENTS.md` to update it with every user-facing change
 - [x] TypeScript config
-- [ ] ESLint + Prettier
+- [x] ESLint + Prettier
 - [ ] Test runner (Vitest) with one passing test
 - [ ] Add install/test/lint/build commands to `AGENTS.md`
 
 ## Phase 2 — Guardrails
+
 - [ ] Pre-commit hooks (husky + lint-staged)
 - [ ] CI workflow: lint, typecheck, test, build on every PR
 - [ ] PR template
@@ -43,6 +51,7 @@ None.
 - [ ] Dependency auditing (Dependabot or `npm audit` in CI)
 
 ## Phase 3 — Spec
+
 - [ ] `docs/PRD.md` — what the app does and for whom
 - [ ] `docs/architecture.md` — modules, data flow
 - [ ] `docs/adr/` — first ADR(s) for stack choices
@@ -50,5 +59,6 @@ None.
 - [ ] Move the **Decisions** log into `docs/adr/`; keep this roadmap to phases and **Next step**
 
 ## Phase 4 — Build
+
 - [ ] Implement tasks one per branch/PR, with tests
 - [ ] Cross-review: one agent implements, the other reviews
