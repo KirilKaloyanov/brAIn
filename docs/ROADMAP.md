@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 1: Add install/test/lint/build commands to `AGENTS.md`.
+Phase 2: Pre-commit hooks (husky + lint-staged).
 
 ## Open decisions
 
@@ -31,6 +31,7 @@ None.
 - 2026-10-29: Prettier 3 formats every file (`.prettierrc.json`: single quotes, semicolons, trailing commas, print width 100). `eslint-config-prettier` turns off ESLint rules that clash with it. `npm run format` / `npm run format:check`.
 - 2026-10-29: `@types/node` is also a root devDependency, for root-level config files like `eslint.config.js`.
 - 2026-10-29: Vitest 5 runs tests from one root `vitest.config.js` with one project per workspace (`server` uses the Node environment). Tests sit next to code as `*.test.ts`; they are typechecked and linted, but `apps/server` builds with `tsconfig.build.json`, which leaves them out of `dist`. `apps/web` joins with jsdom + Testing Library when React is added. `npm test` (single run) / `npm run test:watch`.
+- 2026-10-29: Root `npm run build` runs `build` in every workspace that has one (same pattern as `typecheck`). Agent-facing commands are listed under **Commands** in `AGENTS.md`.
 
 ## Phase 1 — Foundation
 
@@ -40,7 +41,7 @@ None.
 - [x] TypeScript config
 - [x] ESLint + Prettier
 - [x] Test runner (Vitest) with one passing test
-- [ ] Add install/test/lint/build commands to `AGENTS.md`
+- [x] Add install/test/lint/build commands to `AGENTS.md`
 
 ## Phase 2 — Guardrails
 
