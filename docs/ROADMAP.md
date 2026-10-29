@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 2: Pre-commit hooks (husky + lint-staged).
+Phase 2: CI workflow: lint, typecheck, test, build on every PR.
 
 ## Open decisions
 
@@ -32,6 +32,7 @@ None.
 - 2026-10-29: `@types/node` is also a root devDependency, for root-level config files like `eslint.config.js`.
 - 2026-10-29: Vitest 5 runs tests from one root `vitest.config.js` with one project per workspace (`server` uses the Node environment). Tests sit next to code as `*.test.ts`; they are typechecked and linted, but `apps/server` builds with `tsconfig.build.json`, which leaves them out of `dist`. `apps/web` joins with jsdom + Testing Library when React is added. `npm test` (single run) / `npm run test:watch`.
 - 2026-10-29: Root `npm run build` runs `build` in every workspace that has one (same pattern as `typecheck`). Agent-facing commands are listed under **Commands** in `AGENTS.md`.
+- 2026-10-29: Pre-commit hook via husky 9 (`.husky/pre-commit`, installed by the `prepare` script on `npm install`) runs lint-staged 17 (config in `package.json`): JS/TS files get `eslint --fix` then `prettier --write`; all other files get `prettier --write --ignore-unknown`. Typecheck and tests are left to CI to keep commits fast.
 
 ## Phase 1 — Foundation
 
@@ -45,7 +46,7 @@ None.
 
 ## Phase 2 — Guardrails
 
-- [ ] Pre-commit hooks (husky + lint-staged)
+- [x] Pre-commit hooks (husky + lint-staged)
 - [ ] CI workflow: lint, typecheck, test, build on every PR
 - [ ] PR template
 - [ ] Branch protection on `main`
