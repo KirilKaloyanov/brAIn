@@ -2,5 +2,12 @@
   "name": "@brain/server",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.19.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  }
 }
