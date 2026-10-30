@@ -41,3 +41,4 @@ A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on
 - Update docs in the same change as the code they describe.
 - Add an entry under `## [Unreleased]` in `CHANGELOG.md` for every user-facing change, in the same change. Internal work (tooling, refactors, docs for agents) needs no entry.
 - Ask the human before adding dependencies or making decisions listed under **Open decisions**.
+- Shared permission allowlists live in `.claude/settings.json` and `.gemini/settings.json`; keep them in step when one changes. Personal overrides go in `.claude/settings.local.json` (gitignored) or user-level settings.
