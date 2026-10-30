@@ -20,8 +20,9 @@ Run from the repo root. Each runs across all workspaces.
 | Lint      | `npm run lint`                                 |
 | Format    | `npm run format` / `npm run format:check`      |
 | Test      | `npm test` (single run) / `npm run test:watch` |
+| Audit     | `npm run audit`                                |
 
-Before proposing a commit, run `typecheck`, `lint`, `format:check` and `test`.
+Before proposing a commit, run `typecheck`, `lint`, `format:check`, `test` and `audit`.
 A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on staged files; it does not run typecheck or tests. Do not bypass it with `--no-verify`.
 
 ## Start of every session

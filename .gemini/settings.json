@@ -10,6 +10,8 @@
       "run_shell_command(npm run format)",
       "run_shell_command(npm run format:check)",
       "run_shell_command(npm test)",
+      "run_shell_command(npm run audit)",
+      "run_shell_command(npm audit)",
       "run_shell_command(npm outdated)",
       "run_shell_command(npm ls)",
       "run_shell_command(git status)",
