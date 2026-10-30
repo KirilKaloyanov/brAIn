@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 2: Branch protection on `main`.
+Phase 2: Agent permission allowlists (`.claude/settings.json`, `.gemini/settings.json`).
 
 ## Open decisions
 
@@ -35,6 +35,7 @@ None.
 - 2026-10-29: Pre-commit hook via husky 9 (`.husky/pre-commit`, installed by the `prepare` script on `npm install`) runs lint-staged 17 (config in `package.json`): JS/TS files get `eslint --fix` then `prettier --write`; all other files get `prettier --write --ignore-unknown`. Typecheck and tests are left to CI to keep commits fast.
 - 2026-10-30: CI is one GitHub Actions workflow (`.github/workflows/ci.yml`) on every PR and on pushes to `main`: Node from `.nvmrc`, `npm ci`, then `lint`, `format:check`, `typecheck`, `test`, `build` in one job. Read-only token; a newer run on the same ref cancels the older one.
 - 2026-10-30: PR template at `.github/pull_request_template.md`: Summary, Roadmap item / issue, How tested, and a checklist only for what CI can't verify (one item per PR, docs, `CHANGELOG.md`, `ROADMAP.md`). `gh pr create --body` skips the template, so `AGENTS.md` tells agents to follow it.
+- 2026-10-30: `main` is protected by a GitHub ruleset (`main protection`, set up in the UI, targets the default branch, no bypass, admins included): PR required with 0 approvals (solo repo; agents act under the owner's account, which cannot approve its own PRs); required status check `check` (the CI job ID) from GitHub Actions, branch must be up to date; linear history; conversation resolution required; deletion and force pushes blocked. Repo settings: merge commits off, squash and rebase merging on, head branches auto-deleted after merge.
 
 ## Phase 1 — Foundation
 
@@ -51,7 +52,7 @@ None.
 - [x] Pre-commit hooks (husky + lint-staged)
 - [x] CI workflow: lint, typecheck, test, build on every PR
 - [x] PR template
-- [ ] Branch protection on `main`
+- [x] Branch protection on `main`
 - [ ] Agent permission allowlists (`.claude/settings.json`, `.gemini/settings.json`)
 - [ ] Dependency auditing (Dependabot or `npm audit` in CI)
 
