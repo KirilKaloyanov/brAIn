@@ -36,6 +36,7 @@ A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on
 - Never commit, amend, or push without the human's explicit approval. Show the proposed message and changed files first.
 - Never commit directly to `main`. Branch per task: `claude/<topic>` or `gemini/<topic>`.
 - Use Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …).
+- Write PR descriptions using `.github/pull_request_template.md` (`gh pr create --body` skips it).
 - Update docs in the same change as the code they describe.
 - Add an entry under `## [Unreleased]` in `CHANGELOG.md` for every user-facing change, in the same change. Internal work (tooling, refactors, docs for agents) needs no entry.
 - Ask the human before adding dependencies or making decisions listed under **Open decisions**.
