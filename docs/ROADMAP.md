@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 2: Agent permission allowlists (`.claude/settings.json`, `.gemini/settings.json`).
+Phase 2: Dependency auditing (Dependabot or `npm audit` in CI).
 
 ## Open decisions
 
@@ -36,6 +36,7 @@ None.
 - 2026-10-30: CI is one GitHub Actions workflow (`.github/workflows/ci.yml`) on every PR and on pushes to `main`: Node from `.nvmrc`, `npm ci`, then `lint`, `format:check`, `typecheck`, `test`, `build` in one job. Read-only token; a newer run on the same ref cancels the older one.
 - 2026-10-30: PR template at `.github/pull_request_template.md`: Summary, Roadmap item / issue, How tested, and a checklist only for what CI can't verify (one item per PR, docs, `CHANGELOG.md`, `ROADMAP.md`). `gh pr create --body` skips the template, so `AGENTS.md` tells agents to follow it.
 - 2026-10-30: `main` is protected by a GitHub ruleset (`main protection`, set up in the UI, targets the default branch, no bypass, admins included): PR required with 0 approvals (solo repo; agents act under the owner's account, which cannot approve its own PRs); required status check `check` (the CI job ID) from GitHub Actions, branch must be up to date; linear history; conversation resolution required; deletion and force pushes blocked. Repo settings: merge commits off, squash and rebase merging on, head branches auto-deleted after merge.
+- 2026-10-30: Shared agent permissions are checked in. `.claude/settings.json` has `allow` for reading/searching the repo (`Read(./**)` also covers the Grep and Glob tools), `cd` (`Set-Location` in PowerShell), the project's npm scripts, read-only git/`gh` commands, `git fetch`/`switch`/`add` and `npm ci`; `ask` for anything AGENTS.md says needs the human (`npm install`/`uninstall`, `git commit`/`push`/`reset`/`rebase`/`clean`, deleting branches, `gh pr create`/`merge`); and `deny` for reading or editing `.env` files (except `.env.example`), `--no-verify`, and force pushes. Shell `grep` is left out of `allow` because a Bash rule can't see which files it reads, so it would bypass the `.env` block. Agents search with Claude Code's built-in Grep tool instead, which obeys the `Read` rules. Each rule appears as both `Bash(...)` and `PowerShell(...)` because Claude Code on Windows uses both tools. `.gemini/settings.json` mirrors the allow list in `tools.allowed`. Gemini CLI has no working project-level ask/deny (`tools.exclude` is deprecated, and workspace policy files in `.gemini/policies/` don't work yet), so for Gemini those rules rely on AGENTS.md and the protections on `main`.
 
 ## Phase 1 — Foundation
 
@@ -53,7 +54,7 @@ None.
 - [x] CI workflow: lint, typecheck, test, build on every PR
 - [x] PR template
 - [x] Branch protection on `main`
-- [ ] Agent permission allowlists (`.claude/settings.json`, `.gemini/settings.json`)
+- [x] Agent permission allowlists (`.claude/settings.json`, `.gemini/settings.json`)
 - [ ] Dependency auditing (Dependabot or `npm audit` in CI)
 
 ## Phase 3 — Spec
