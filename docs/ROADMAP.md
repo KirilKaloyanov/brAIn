@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 4: #24 (server skeleton) is done; next is #25; check it from the repo's public URL. Implement issues in order, one per branch/PR; each issue lists what it depends on.
+Phase 4: #24 (server skeleton) and #25 (`@brain/shared`) are done; next is #26 (web skeleton); check it from the repo's public URL. Implement issues in order, one per branch/PR; each issue lists what it depends on.
 
 ## Open decisions
 

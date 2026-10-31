@@ -35,7 +35,7 @@ A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on
 ## Rules
 
 - Keep each session/PR small: one roadmap item at a time.
-- Never commit, amend, or push without the human's explicit approval. Show the proposed message, PR description as markdown and changed files first.
+- Never commit, amend, or push without the human's explicit approval. Show the proposed message, PR description as markdown and changed files first. Do not open the PR.
 - Never commit directly to `main`. Branch per task: `claude/<topic>` or `gemini/<topic>`.
   `main` is protected: direct pushes and force pushes are rejected, and a PR merges (squash or rebase) only when the CI job `check` passes, the branch is up to date with `main` and all review threads are resolved. Renaming the `check` job requires updating the ruleset in GitHub settings.
 - Use Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …).

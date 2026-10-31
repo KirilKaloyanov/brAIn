@@ -7,8 +7,9 @@ import type { Config } from './config.js';
 const config: Config = { nodeEnv: 'test', port: 8080, publicUrl: 'http://localhost:8080' };
 
 describe('createApp', () => {
-  it('answers GET /healthz with 200', async () => {
-    await request(createApp(config)).get('/healthz').expect(200);
+  it('answers GET /healthz with 200 and status ok', async () => {
+    const res = await request(createApp(config)).get('/healthz').expect(200);
+    expect(res.body).toEqual({ status: 'ok' });
   });
 });
 
