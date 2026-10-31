@@ -67,10 +67,9 @@ local component state while it arrives, then the query cache is updated with the
 
 ```text
 chats/{chatId}
-  title: string | null          # set after the first exchange (OD-2)
+  title: string | null          # set after the first exchange (§5)
   createdAt: Timestamp
   updatedAt: Timestamp          # last message; sidebar sorts by this, newest first
-  webSearch?: boolean           # only if the toggle is per chat (OD-3)
   importedFrom?: { kind: 'gemini-markdown', url: string | null }   # imported chats (FR-15)
 
 chats/{chatId}/messages/{messageId}
@@ -79,7 +78,7 @@ chats/{chatId}/messages/{messageId}
   status: 'complete' | 'error'
   error?: { code: string, message: string }
   sources?: { title: string, url: string }[]   # from Search grounding (FR-14)
-  webSearch: boolean            # whether search was on for this answer
+  webSearch: boolean            # whether search was on for this message (FR-13)
   createdAt: Timestamp
 
 devices/{sha256(sessionToken)}
@@ -170,8 +169,13 @@ sequenceDiagram
   end
   S->>F: save answer (+ sources), update chat.updatedAt
   S-->>W: event: done {message}
-  S->>F: set title after first exchange (OD-2)
-  S-->>W: event: title {title}
+  opt first exchange
+    S->>F: title = start of first message
+    S-->>W: event: title {title}
+    S->>G: generateContent(short title prompt)
+    S->>F: title = Gemini's title
+    S-->>W: event: title {title}
+  end
 ```
 
 - **New chat.** The web app generates no ID; it posts to `/api/chats/new/messages` and the
@@ -182,15 +186,23 @@ sequenceDiagram
 - **History.** The server rebuilds the Gemini `contents` from the saved messages on every turn;
   no chat state is kept in memory. If the history is too long, the oldest turns are dropped to
   fit a token budget (FR-6). Messages with `status: 'error'` are left out.
-- **Web search.** When on, the request includes the `googleSearch` tool; when off, it has no
-  tools (FR-13). Sources come from the response's grounding metadata and are saved on the answer
-  (FR-14).
+- **Title.** After the first answer is saved, the chat's title is set to the first user
+  message, on one line, cut at a word boundary to about 60 characters. The server then asks
+  Gemini for a 3–6 word title from the first message and answer, without search. If that call
+  succeeds and returns a non-empty title (trimmed, at most 80 characters), it replaces the
+  first one. If it fails, the first title stays and no error is shown. The web app shows
+  whichever `title` event came last. A failed first answer still gets the first title.
+- **Web search.** The toggle is per message: the web app sends `webSearch` with each message
+  and turns the toggle off after sending (FR-13). Nothing is stored on the chat. When on, the
+  request includes the `googleSearch` tool; when off, it has no tools. Sources come from the
+  response's grounding metadata and are saved on the answer (FR-14). A retry uses the
+  `webSearch` value of the message it retries.
 - **Errors.** Gemini failures, timeouts and quota errors become an `error` event with a code
   the app can show, and an error message is saved. `POST /api/chats/:id/retry` runs the last
   user message again (FR-7).
 - **Leaving mid-answer.** If the browser disconnects (chat switched, app locked, tab closed),
   the server keeps reading the Gemini stream and still saves the answer (FR-11, FR-3a). See §9
-  for the Cloud Run caveat.
+  for the Cloud Run caveat and what the app shows if an answer is lost.
 
 ### 5.1 Import a chat (FR-15)
 
@@ -246,7 +258,7 @@ Response: …
 
 - The chat gets `title` from the heading, `importedFrom: { kind: 'gemini-markdown', url }`,
   and `createdAt` / `updatedAt` set to the import time, so it shows first in the sidebar. The
-  title step from OD-2 is skipped.
+  title step from §5 is skipped.
 - Each turn becomes a `user` and a `model` message with `status: 'complete'`,
   `webSearch: false` and no `sources` (the export has none). The export has no timestamps, so
   the messages get the import time plus 1 ms per message, which keeps them in order.
@@ -314,20 +326,29 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
   production dependencies into a `node:24-slim` image that runs `node apps/server/dist/index.js`.
 - **Cloud Run.** Its own service account with Firestore access (`roles/datastore.user`) and
   access to the two secrets. Request timeout raised (e.g. 5 minutes) so long answers can finish.
-  Minimum instances 0; the performance target in PRD §6 allows for a cold start.
+  Minimum instances 0; the performance target in PRD §6 allows for a cold start. Billing stays
+  request-based (CPU only during requests), see §9.
+- **Spending limits (PRD §6 Cost).** Set in the Google Cloud console, not in the app:
+  - a monthly budget on the billing account with email alerts at 50%, 90% and 100%. It covers
+    the whole project, but only warns and never stops spending;
+  - lowered requests-per-minute and requests-per-day quotas on the Generative Language API for
+    the project. This is the hard stop, and it also holds if the API key leaks.
+
+  Gemini then answers with a quota error, which becomes an `error` event like any other (§5,
+  FR-7). The chosen values are written down here once they are set.
 
 ## 9. Risks and open points
 
 - **Answers after a disconnect.** With Cloud Run's default "CPU only during requests", an
-  instance may be throttled once the browser disconnects, which can stall the rest of an answer.
-  Options: turn on CPU always allocated, or accept the small risk for a single user. Decide when
-  FR-11 is built.
-- **OD-2 (titles).** Either option fits the flow in §5: the title is set after the first `done`
-  event, from the first message or from an extra, short Gemini call.
-- **OD-3 (search toggle scope).** The request always carries `webSearch`; if it is per chat, the
-  chat document stores it too.
-- **OD-5 (spending cap).** If a cap is chosen, it is a check in the `chats` routes before calling
-  Gemini, with a counter document in Firestore.
+  instance may be throttled once the browser disconnects, which can stall the rest of an answer
+  (and the title call after it). Accepted for a single user: billing stays request-based. If an
+  answer is lost this way, the chat ends with a user message and no answer. The web app treats
+  a last user message older than the request timeout (§8) as a failed answer and offers a retry
+  (FR-7). If this happens often, switch the service to instance-based billing (CPU always
+  allocated); no code changes.
+- **Spending.** There is no in-app cap: the budget alert and API quota in §8 limit spending. An
+  in-app daily counter (a Firestore document checked before each Gemini call) can be added
+  later if a clearer in-app limit is wanted.
 - **Import format.** Google's export format is not documented and can change. The strict parser
   (§5.1) makes a change show up as an import error, not as a broken chat.
 - **Post-MVP memory.** Vector search over memories and axioms can use Firestore vector search, so

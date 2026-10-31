@@ -47,8 +47,9 @@ and want:
    sidebar with a title.
 3. **Continue a chat.** The owner picks a past chat from the sidebar, sees the whole
    conversation and asks a follow-up. The answer takes the earlier messages into account.
-4. **Search the web.** The owner turns web search on, asks about something recent and gets an
-   answer with links to its sources.
+4. **Search the web.** The owner turns web search on for one message, asks about something
+   recent and gets an answer with links to its sources. Search is off again for the next
+   message.
 5. **Delete a chat.** The owner deletes a chat, confirms, and it is gone for good.
 6. **Unlock after a break.** The owner comes back after more than 30 minutes away. The app is
    locked; they enter their PIN and carry on where they left off.
@@ -137,8 +138,9 @@ Each requirement lists acceptance criteria (AC) that a task built from it must m
 **FR-9 Chat list.**
 
 - AC: A sidebar lists all chats, most recently active first.
-- AC: Each chat shows a title, set automatically after the first exchange (how it is made
-  follows OD-2).
+- AC: Each chat shows a title, set automatically after the first exchange: first the start of
+  the first message, then a short title written by Gemini. If Gemini's title fails, the first
+  one stays.
 - AC: On a phone-sized screen the sidebar can be opened and closed.
 
 **FR-10 New chat.**
@@ -163,9 +165,11 @@ Each requirement lists acceptance criteria (AC) that a task built from it must m
 
 **FR-13 Web search toggle.**
 
-- AC: A visible control switches web search on or off. Whether it applies per chat or per
-  message follows OD-3.
+- AC: A visible control next to the message input turns web search on for the next message.
+- AC: The control turns off again once the message is sent, so every message starts with search
+  off, including the first message of a chat and the first after reopening one.
 - AC: With search off, the model has no web access.
+- AC: Each message remembers whether it was sent with search on.
 
 **FR-14 Sources.**
 
@@ -200,8 +204,10 @@ a link back to the Gemini chat, and turns separated by `---`, each made of an
   browser. Session cookies can't be read by scripts or sent from other sites.
 - **Privacy.** Conversations are stored only in the owner's own Google Cloud project and are
   kept until the owner deletes them.
-- **Cost.** The app never calls Gemini without a signed-in owner. Any spending cap follows
-  OD-5.
+- **Cost.** The app never calls Gemini without a signed-in owner. Spending is limited outside
+  the app: a Google Cloud budget alert warns the owner, and a lowered Gemini API quota stops
+  calls past a daily limit (see `docs/architecture.md` §8). Hitting the quota shows an error as
+  in FR-7.
 - **Performance.** The app shell loads in under 2 s on a typical connection, after a cold
   start of the server. Opening a chat with 100 messages takes under 1 s once the server is
   running.
