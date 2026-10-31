@@ -35,7 +35,8 @@ flowchart LR
 imported by both sides without pulling server code into the browser.
 
 Its `exports` point TypeScript at `src/` and runtime imports at `dist/`, so typecheck and lint
-need no build step. Vitest aliases it to `src/` as well. Node, running the built server, loads
+need no build step. Vitest and Vite alias it to `src/` as well, so the browser bundle is built
+from source. Node, running the built server, loads
 `dist/`, so `npm run build` builds `packages/*` before `apps/*` (the order of `workspaces` in the
 root `package.json`). Type-only imports are erased and need no build.
 
@@ -325,16 +326,18 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
 
 ## 8. Development, testing and deployment
 
-- **Local.** `vite` serves the web app with hot reload and proxies `/api` and `/auth` to the
-  Express server, which runs with `tsx watch` against the Firestore emulator. Google sign-in
-  works locally with an OAuth client that allows `http://localhost` redirects.
+- **Local.** `vite` (`npm run dev:web`) serves the web app with hot reload and proxies `/api`
+  and `/auth` to the Express server (`npm run dev`, on `PORT` from `.env`), which runs with
+  `tsx watch` against the Firestore emulator. Google sign-in works locally with an OAuth client
+  that allows `http://localhost` redirects.
 - **Tests.** Vitest, as today. Server route tests use `supertest`-style requests against the
   Express app with a fake Gemini client and the Firestore emulator (or an in-memory fake
   repository). Web tests use jsdom and Testing Library. No test calls the real Gemini API.
   The import parser is tested against made-up fixture files in the Gemini export format, not
   the owner's real chats.
 - **Build.** `npm run build` builds `@brain/web` to `apps/web/dist` and `@brain/server` to
-  `apps/server/dist`; the server serves the web build as static files.
+  `apps/server/dist`. With `NODE_ENV=production` the server serves the web build as static files
+  and answers any other `GET` outside `/api` and `/auth` with its `index.html` (SPA fallback).
 - **Container.** A multi-stage `Dockerfile`: install and build, then copy only `dist` folders and
   production dependencies into a `node:24-slim` image that runs `node apps/server/dist/index.js`.
 - **Cloud Run.** Its own service account with Firestore access (`roles/datastore.user`) and

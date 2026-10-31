@@ -1,4 +1,5 @@
 // @ts-check
+import react from '@vitejs/plugin-react';
 import { resolve as resolvePath } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
@@ -31,7 +32,16 @@ export default defineConfig({
           include: ['src/**/*.test.ts'],
         },
       },
-      // apps/web joins when React is added (jsdom + Testing Library).
+      {
+        resolve,
+        plugins: [react()],
+        test: {
+          name: 'web',
+          root: 'apps/web',
+          environment: 'jsdom',
+          include: ['src/**/*.test.{ts,tsx}'],
+        },
+      },
     ],
   },
 });
