@@ -34,6 +34,11 @@ flowchart LR
 `packages/shared` holds types and small pure helpers only, no runtime dependencies, so it can be
 imported by both sides without pulling server code into the browser.
 
+Its `exports` point TypeScript at `src/` and runtime imports at `dist/`, so typecheck and lint
+need no build step. Vitest aliases it to `src/` as well. Node, running the built server, loads
+`dist/`, so `npm run build` builds `packages/*` before `apps/*` (the order of `workspaces` in the
+root `package.json`). Type-only imports are erased and need no build.
+
 ### 2.1 Server (`apps/server/src`)
 
 | Module   | Responsibility                                                                                                                  |

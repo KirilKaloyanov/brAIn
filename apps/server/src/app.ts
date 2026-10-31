@@ -1,4 +1,5 @@
 // Builds the Express app without listening, so tests can send requests to it directly.
+import type { HealthResponse } from '@brain/shared';
 import express, { type ErrorRequestHandler } from 'express';
 import type { Config } from './config.js';
 
@@ -7,7 +8,7 @@ export function createApp(config: Config): express.Express {
   app.disable('x-powered-by');
 
   app.get('/healthz', (_req, res) => {
-    res.sendStatus(200);
+    res.json({ status: 'ok' } satisfies HealthResponse);
   });
 
   app.use(errorHandler(config));
