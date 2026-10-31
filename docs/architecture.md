@@ -2,7 +2,7 @@
 
 How the app in `docs/PRD.md` is built: modules, data, APIs and the main flows. Requirements are
 referenced as `FR-n`, open questions as `OD-n` (see `docs/ROADMAP.md`). Stack choices and their
-reasons are recorded in `docs/adr/` once it exists.
+reasons are recorded in `docs/adr/`.
 
 ## 1. Overview
 
