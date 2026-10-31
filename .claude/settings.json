@@ -3,7 +3,6 @@
   "permissions": {
     "allow": [
       "Read(./**)",
-      "Bash(cd *)",
       "Bash(npm ci)",
       "Bash(npm run build *)",
       "Bash(npm run typecheck *)",
@@ -31,7 +30,6 @@
       "Bash(gh run view *)",
       "Bash(gh issue view *)",
       "Bash(gh issue list *)",
-      "PowerShell(Set-Location *)",
       "PowerShell(npm ci)",
       "PowerShell(npm run build *)",
       "PowerShell(npm run typecheck *)",
