@@ -29,7 +29,7 @@ A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on
 
 1. Read this file.
 2. Read `docs/ROADMAP.md` and work on the item under **Next step** only.
-3. When done, tick it off, update **Next step**, and record any decision made.
+3. When done, tick it off and update **Next step**. Record a decision with lasting reasons as a new ADR in `docs/adr/` (see its `README.md`).
 
 ## Rules
 

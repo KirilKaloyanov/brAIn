@@ -4,60 +4,13 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 3: Move the **Decisions** log into `docs/adr/`; keep this roadmap to phases and **Next step**. After that, Phase 4 starts with #24.
+Phase 4: start with #24 (the first MVP issue). Implement issues in order, one per branch/PR; each issue lists what it depends on.
 
 ## Open decisions
 
-Referenced from `docs/PRD.md` and `docs/architecture.md` as `OD-n`.
+Referenced from `docs/PRD.md` and `docs/architecture.md` as `OD-n`. When one is resolved, record it as an ADR in `docs/adr/` and remove it here.
 
 None right now.
-
-## Decisions
-
-- 2026-10-24: `AGENTS.md` is the single source of agent instructions; `CLAUDE.md`/`GEMINI.md` point to it.
-- 2026-10-24: Default branch is `main`; work happens on per-task branches.
-- 2026-10-24: App type is full-stack.
-- 2026-10-24: Language is TypeScript.
-- 2026-10-24: No fixed work split between Claude and Gemini.
-- 2026-10-24: Code is hosted on GitHub; tasks are tracked in GitHub Issues.
-- 2026-10-24: Backend runs on Google Cloud Run.
-- 2026-10-24: Frontend is React, served by the Cloud Run backend (single container, same origin). Revisit a CDN (e.g. Firebase Hosting) if needed later.
-- 2026-10-24: Text files use LF line endings, in the repo and on disk, on every OS. Enforced by `.gitattributes` (`* text=auto eol=lf`).
-- 2026-10-24: Monorepo with npm workspaces: `apps/web` (React), `apps/server` (backend), `packages/*` for shared code.
-- 2026-10-24: Package manager is npm.
-- 2026-10-24: Target Node 24 LTS (`.nvmrc`, `engines` in `package.json`).
-- 2026-10-25: Workspace packages use the `@brain/` scope (`@brain/web`, `@brain/server`).
-- 2026-10-25: `CHANGELOG.md` follows Keep a Changelog 1.1.0 and SemVer; only user-facing changes get entries. Foundation work so far is internal, so `[Unreleased]` starts empty.
-- 2026-10-25: TypeScript 6.x (root devDependency). Shared strict options in `tsconfig.base.json`; each app extends it. Server uses `NodeNext` and compiles with `tsc` to `apps/server/dist` (run as `node dist/index.js`). Web uses `Bundler` resolution with `noEmit`, ready for Vite. `npm run typecheck` at the root checks every workspace.
-- 2026-10-29: ESLint 10 with one root flat config (`eslint.config.js`): `@eslint/js` recommended + `typescript-eslint` recommended type-checked rules (`projectService` picks each file's nearest tsconfig). React lint plugins wait until React is added. `npm run lint` at the root.
-- 2026-10-29: Prettier 3 formats every file (`.prettierrc.json`: single quotes, semicolons, trailing commas, print width 100). `eslint-config-prettier` turns off ESLint rules that clash with it. `npm run format` / `npm run format:check`.
-- 2026-10-29: `@types/node` is also a root devDependency, for root-level config files like `eslint.config.js`.
-- 2026-10-29: Vitest 5 runs tests from one root `vitest.config.js` with one project per workspace (`server` uses the Node environment). Tests sit next to code as `*.test.ts`; they are typechecked and linted, but `apps/server` builds with `tsconfig.build.json`, which leaves them out of `dist`. `apps/web` joins with jsdom + Testing Library when React is added. `npm test` (single run) / `npm run test:watch`.
-- 2026-10-29: Root `npm run build` runs `build` in every workspace that has one (same pattern as `typecheck`). Agent-facing commands are listed under **Commands** in `AGENTS.md`.
-- 2026-10-29: Pre-commit hook via husky 9 (`.husky/pre-commit`, installed by the `prepare` script on `npm install`) runs lint-staged 17 (config in `package.json`): JS/TS files get `eslint --fix` then `prettier --write`; all other files get `prettier --write --ignore-unknown`. Typecheck and tests are left to CI to keep commits fast.
-- 2026-10-30: CI is one GitHub Actions workflow (`.github/workflows/ci.yml`) on every PR and on pushes to `main`: Node from `.nvmrc`, `npm ci`, then `lint`, `format:check`, `typecheck`, `test`, `build` in one job. Read-only token; a newer run on the same ref cancels the older one.
-- 2026-10-30: PR template at `.github/pull_request_template.md`: Summary, Roadmap item / issue, How tested, and a checklist only for what CI can't verify (one item per PR, docs, `CHANGELOG.md`, `ROADMAP.md`). `gh pr create --body` skips the template, so `AGENTS.md` tells agents to follow it.
-- 2026-10-30: `main` is protected by a GitHub ruleset (`main protection`, set up in the UI, targets the default branch, no bypass, admins included): PR required with 0 approvals (solo repo; agents act under the owner's account, which cannot approve its own PRs); required status check `check` (the CI job ID) from GitHub Actions, branch must be up to date; linear history; conversation resolution required; deletion and force pushes blocked. Repo settings: merge commits off, squash and rebase merging on, head branches auto-deleted after merge.
-- 2026-10-30: Shared agent permissions are checked in. `.claude/settings.json` has `allow` for reading/searching the repo (`Read(./**)` also covers the Grep and Glob tools), the project's npm scripts, read-only git/`gh` commands, `git fetch`/`switch`/`add` and `npm ci`; `ask` for anything AGENTS.md says needs the human (`npm install`/`uninstall`, `git commit`/`push`/`reset`/`rebase`/`clean`, deleting branches, `gh pr create`/`merge`); and `deny` for reading or editing `.env` files (except `.env.example`), `--no-verify`, and force pushes. Shell `grep` is left out of `allow` because a Bash rule can't see which files it reads, so it would bypass the `.env` block. Agents search with Claude Code's built-in Grep tool instead, which obeys the `Read` rules. Each rule appears as both `Bash(...)` and `PowerShell(...)` because Claude Code on Windows uses both tools. `.gemini/settings.json` mirrors the allow list in `tools.allowed`. Gemini CLI has no working project-level ask/deny (`tools.exclude` is deprecated, and workspace policy files in `.gemini/policies/` don't work yet), so for Gemini those rules rely on AGENTS.md and the protections on `main`.
-- 2026-10-30: Dependency auditing via Dependabot (`.github/dependabot.yml`: weekly grouped checks for minor/patch npm updates and GitHub Actions, ignoring all `semver-major` bumps for npm to avoid automated breaking changes, `chore(deps)` commit prefix) and CI (`npm run audit` running `npm audit --omit=dev --audit-level=high` in `.github/workflows/ci.yml`). Omitting devDependencies in CI audit prevents upstream dev tool advisories from freezing unrelated PRs.
-- 2026-10-31: `cd` is not in either allowlist. The earlier `Bash(cd *)` / `PowerShell(Set-Location *)` rules approved a `cd` to any directory. Claude Code already treats a `cd` into its working directory (or an added directory) as read-only and runs it without a prompt, so without a rule a `cd` inside the repo still runs freely and a `cd` outside it asks first. Gemini CLI can't limit a shell command to a path from project settings (`tools.allowed` only matches prefixes, and workspace policy files with `argsPattern` don't work yet), so `cd` / `Set-Location` there always ask. Gemini rarely needs them because `run_shell_command` takes a `dir_path` argument.
-- 2026-10-31: Product scope is in `docs/PRD.md`: a private, single-user chat app for Google Gemini with saved conversations and toggleable web search. Personal memory, model choice and attachments come after the MVP. The PRD covers only what and for whom; data model and API design go in `docs/architecture.md`.
-- 2026-10-31: The app talks to Google Gemini through the `@google/genai` SDK and uses Google Search grounding for web search.
-- 2026-10-31: Conversations and messages are stored in Google Cloud Firestore.
-- 2026-10-31: Sign-in uses Google OAuth; only the email in the `ALLOWED_EMAIL` setting is let in.
-- 2026-10-31: In production, secrets (such as the Gemini API key) live in Google Cloud Secret Manager, and Firestore is reached with the Cloud Run service account's default credentials.
-- 2026-10-31: A Google sign-in keeps a device signed in for 15 days. The server keeps a record of signed-in devices, so signing out (or too many wrong PINs) can cancel one. After 30 minutes of inactivity the app locks and a 4-digit PIN unlocks it; 3 wrong PINs in a row sign the device out. The PIN is set in the app after the first sign-in and stored only as a hash. Passkey unlock is a post-MVP option.
-- 2026-10-31: Architecture is in `docs/architecture.md`: modules, Firestore data model, auth/lock flow, HTTP API and deployment.
-- 2026-10-31: OD-1 resolved: answers stream to the browser as Server-Sent Events on the response of a `POST`. The server finishes and saves an answer even if the browser disconnects.
-- 2026-10-31: OD-4 resolved: a signed-out page load is redirected to `/sign-in` and a signed-out API call gets `401` (the app then goes to `/sign-in`). A locked device's API calls get `403 { code: 'locked' }` and the app shows the PIN screen.
-- 2026-10-31: Server framework is Express 5. Web app uses Vite, React Router and TanStack Query. Shared API types go in `packages/shared` (`@brain/shared`). Dependencies are added when the first task needs them.
-- 2026-10-31: Importing a chat from a Markdown file is in the MVP (FR-15). The only supported format is a gemini.google.com chat exported to Google Docs and downloaded as Markdown. An imported chat is an ordinary chat that can be continued; it only adds `importedFrom` to the chat document. The browser sends the file's text as JSON to `POST /api/chats/import` (no multipart upload, no new dependency), up to 1 MB. The parser is strict: a file that doesn't match is rejected whole, so a change in Google's format shows up as an error and the parser gets updated. Details in `docs/architecture.md` §5.1.
-- 2026-10-31: Decisions with lasting reasons go in `docs/adr/` as numbered ADRs (Context / Decision / Consequences, see `docs/adr/template.md`); an accepted ADR is superseded by a new one, not rewritten. First ADRs cover the stack: ADR-0001 (the process), 0002 (TypeScript + npm workspaces), 0003 (one Cloud Run container), 0004 (Express 5, Vite + React), 0005 (Firestore), 0006 (`@google/genai`). Auth/lock and SSE streaming move to ADRs with the rest of this log.
-- 2026-10-31: OD-2 resolved: after the first exchange the chat title is set to the start of the first message, then replaced by a short title from an extra Gemini call if that call succeeds. A failed title call keeps the first title and shows no error.
-- 2026-10-31: OD-3 resolved: web search is per message. The toggle turns off after each send, so every message starts with search off. Only messages store `webSearch`; the chat document doesn't.
-- 2026-10-31: OD-5 resolved: no in-app spending cap. A Google Cloud budget alert (warns only) and lowered Gemini API request quotas (hard stop, also covers a leaked key) are set in the console and recorded in `docs/architecture.md` §8. Quota errors show as ordinary chat errors (FR-7).
-- 2026-10-31: Cloud Run stays on request-based billing (CPU only during requests). An answer lost when the browser disconnects shows as a failed answer with a retry; switch to instance-based billing if this happens often.
-- 2026-10-31: The MVP is split into 20 GitHub issues (#24–#43) in the `MVP` milestone, labelled `server`, `web` and/or `infra`. Each issue has a spec reference, a **Depends on** line, acceptance criteria as checkboxes and the dependencies it is expected to add (still confirmed with the owner when the task starts). The owner creates and manages issues in the GitHub UI; agents draft them.
 
 ## Phase 1 — Foundation
 
@@ -85,7 +38,7 @@ None right now.
 - [x] Import a chat from a Markdown file — add it to `docs/PRD.md` and `docs/architecture.md`
 - [x] `docs/adr/` — first ADR(s) for stack choices
 - [x] Break PRD into small tasks with acceptance criteria, in the chosen task tracker (GitHub issues #24–#43, milestone `MVP`)
-- [ ] Move the **Decisions** log into `docs/adr/`; keep this roadmap to phases and **Next step**
+- [x] Move the **Decisions** log into `docs/adr/`; keep this roadmap to phases and **Next step**
 
 ## Phase 4 — Build
 

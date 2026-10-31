@@ -15,4 +15,5 @@
 - [ ] One roadmap item / task only
 - [ ] Docs updated alongside the code they describe
 - [ ] `CHANGELOG.md` entry under `[Unreleased]` (user-facing changes only)
-- [ ] `docs/ROADMAP.md`: item ticked, **Next step** updated, decisions recorded
+- [ ] `docs/ROADMAP.md`: item ticked, **Next step** updated
+- [ ] ADR added in `docs/adr/` for any decision made
