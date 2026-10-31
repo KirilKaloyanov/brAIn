@@ -144,9 +144,11 @@ input so that reading or typing keeps the server-side session awake.
   `crypto.timingSafeEqual`. No extra dependency.
 - `POST /api/session/unlock` checks the PIN. Success resets `failedPins` and `lastActiveAt`.
   The third failure in a row deletes the device and clears the cookie.
-- "Forgot PIN" and "Sign out" both delete the device and clear the cookie. After the next Google
-  sign-in, "Forgot PIN" lets the owner set a new PIN (the old hash is cleared when Forgot PIN is
-  used).
+- "Sign out" deletes this device and clears the cookie.
+- "Forgot PIN" clears the PIN hash, deletes **every** device and clears this device's cookie.
+  After the next Google sign-in the owner sets a new PIN. Deleting all devices matters: a device
+  left signed in would see "no PIN set" and offer to set one, which would let whoever holds it
+  past the lock without a Google sign-in.
 
 ## 5. Chat flow (FR-4 – FR-7, FR-13, FR-14)
 
@@ -182,7 +184,9 @@ sequenceDiagram
   server answers with the new `chatId` in the first event, after which the app moves to
   `/c/:chatId`.
 - **Events.** `chat`, `delta`, `sources`, `done`, `title`, `error`. Their types live in
-  `@brain/shared`.
+  `@brain/shared`. The server closes the stream after the title step, or after `done` when there
+  is no title step. The web app reads until the server closes it: `done` means the answer is
+  saved, not that the stream is over.
 - **History.** The server rebuilds the Gemini `contents` from the saved messages on every turn;
   no chat state is kept in memory. If the history is too long, the oldest turns are dropped to
   fit a token budget (FR-6). Messages with `status: 'error'` are left out.
@@ -207,7 +211,8 @@ sequenceDiagram
 ### 5.1 Import a chat (FR-15)
 
 1. The sidebar's "Import chat" opens a file picker (`accept=".md"`). The app reads the file
-   with `File.text()` and checks its size.
+   with `File.text()` and checks its size. If Google Docs downloads a `.zip` (it does when the
+   doc has images), the owner unzips it and picks the `.md` file inside.
 2. It sends `POST /api/chats/import { markdown }`. The file travels as JSON, not as a multipart
    upload, so the `Origin` + JSON rule from §4.1 still protects the route and no upload library
    is needed.
@@ -221,18 +226,18 @@ through the flow in §5, and the history sent to Gemini includes the imported tu
 `{ title, url, turns: { prompt, response }[] }` or a format error. It expects what Google Docs
 writes when a Gemini "Export to Docs" document is downloaded as Markdown:
 
-```markdown
+```text
 # **Chat title**
 
 [https\://gemini.google.com/app/…](https://gemini.google.com/app/…)
 
-_User prompt: first question_
+*User prompt: first question*
 
 Response: first answer, in Markdown…
 
 ---
 
-_User prompt: second question_
+*User prompt: second question*
 
 Response: …
 
@@ -246,6 +251,9 @@ Response: …
   `*`, which may be on a later line. The answer starts after `Response: ` and runs to a `---`
   line that is followed by the next turn or the end of the file, so a `---` inside an answer is
   kept.
+- **Tolerances:** the prompt may be wrapped in `_` instead of `*` (Prettier and some editors
+  rewrite one to the other), and trailing whitespace on the prompt, `Response:` and `---` lines
+  is ignored. Nothing else is loosened.
 - **Escapes:** Google Docs escapes Markdown characters (`\:`, `\.`, `\+`, `\=`). They are
   removed from the title and prompts, which are shown as plain text. Answers are kept as
   written, because a Markdown renderer already shows the escapes correctly.
@@ -283,7 +291,7 @@ marked otherwise.
 | `GET /api/session`             | `{ state: 'needs-pin' \| 'locked' \| 'unlocked' }` (signed in, any lock state) |
 | `POST /api/session/pin`        | Set the PIN when none is set (signed in)                                       |
 | `POST /api/session/unlock`     | `{ pin }` → unlock (signed in, locked)                                         |
-| `POST /api/session/forgot-pin` | Sign out and clear the PIN (signed in)                                         |
+| `POST /api/session/forgot-pin` | Clear the PIN and sign out every device (signed in)                            |
 | `PUT /api/session/pin`         | `{ currentPin, newPin }` → change the PIN                                      |
 | `POST /api/session/ping`       | Keep the session active                                                        |
 | `GET /api/chats`               | Chat list, newest first                                                        |
@@ -351,6 +359,12 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
   later if a clearer in-app limit is wanted.
 - **Import format.** Google's export format is not documented and can change. The strict parser
   (§5.1) makes a change show up as an import error, not as a broken chat.
+- **Lock gaps (post-MVP).** Locking is by idle time only. A closed tab doesn't lock, so
+  reopening within 30 minutes goes straight in, and there is no "Lock now" button. Planned fix:
+  a correct PIN returns a random unlock token that the app keeps in `sessionStorage` (cleared
+  when the tab closes) and sends with each API call; the device record stores its hash, and a
+  device is unlocked only with that token and less than 30 minutes idle. "Lock now" then
+  deletes the token. A `pagehide` request was ruled out: mobile browsers often don't fire it.
 - **Post-MVP memory.** Vector search over memories and axioms can use Firestore vector search, so
   it can live in the same database. It would add a module next to `chats` that adds context
   before the Gemini call.

@@ -94,8 +94,8 @@ Each requirement lists acceptance criteria (AC) that a task built from it must m
 - AC: After 30 minutes without activity the app locks and asks for the PIN.
 - AC: The correct PIN unlocks the app and returns the owner to where they were.
 - AC: After 3 wrong PINs in a row, the device is signed out and needs a new Google sign-in.
-- AC: A "Forgot PIN" action signs the device out; after a new Google sign-in the owner sets a
-  new PIN.
+- AC: A "Forgot PIN" action signs out every device, not just this one; after a new Google
+  sign-in the owner sets a new PIN.
 - AC: A PIN only unlocks a device that is still signed in; it never replaces Google sign-in.
 - AC: The PIN is stored only as a secure hash, never as plain text.
 - AC: An answer still being produced when the app locks is finished and saved.

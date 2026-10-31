@@ -19,5 +19,4 @@ numbered in order and listed in `docs/adr/README.md`.
 
 - The reason for a choice sits next to the choice, in the repo, and changes go through review.
 - Changing a decision means a new ADR that supersedes the old one, so history is kept.
-- Until the **Decisions** log is moved into ADRs (a later roadmap item), both exist; for a topic
-  that has an ADR, the ADR wins.
+- The **Decisions** log in `docs/ROADMAP.md` was moved into ADR-0002 to 0016 and removed.
