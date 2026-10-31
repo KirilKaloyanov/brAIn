@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 3: Break PRD into small tasks with acceptance criteria, in the chosen task tracker.
+Phase 3: Move the **Decisions** log into `docs/adr/`; keep this roadmap to phases and **Next step**. After that, Phase 4 starts with #24.
 
 ## Open decisions
 
@@ -57,6 +57,7 @@ None right now.
 - 2026-10-31: OD-3 resolved: web search is per message. The toggle turns off after each send, so every message starts with search off. Only messages store `webSearch`; the chat document doesn't.
 - 2026-10-31: OD-5 resolved: no in-app spending cap. A Google Cloud budget alert (warns only) and lowered Gemini API request quotas (hard stop, also covers a leaked key) are set in the console and recorded in `docs/architecture.md` §8. Quota errors show as ordinary chat errors (FR-7).
 - 2026-10-31: Cloud Run stays on request-based billing (CPU only during requests). An answer lost when the browser disconnects shows as a failed answer with a retry; switch to instance-based billing if this happens often.
+- 2026-10-31: The MVP is split into 20 GitHub issues (#24–#43) in the `MVP` milestone, labelled `server`, `web` and/or `infra`. Each issue has a spec reference, a **Depends on** line, acceptance criteria as checkboxes and the dependencies it is expected to add (still confirmed with the owner when the task starts). The owner creates and manages issues in the GitHub UI; agents draft them.
 
 ## Phase 1 — Foundation
 
@@ -83,10 +84,10 @@ None right now.
 - [x] `docs/architecture.md` — modules, data flow
 - [x] Import a chat from a Markdown file — add it to `docs/PRD.md` and `docs/architecture.md`
 - [x] `docs/adr/` — first ADR(s) for stack choices
-- [ ] Break PRD into small tasks with acceptance criteria, in the chosen task tracker
+- [x] Break PRD into small tasks with acceptance criteria, in the chosen task tracker (GitHub issues #24–#43, milestone `MVP`)
 - [ ] Move the **Decisions** log into `docs/adr/`; keep this roadmap to phases and **Next step**
 
 ## Phase 4 — Build
 
-- [ ] Implement tasks one per branch/PR, with tests
+- [ ] Implement tasks one per branch/PR, with tests, in issue order (#24–#43, milestone `MVP`; each issue lists what it depends on)
 - [ ] Cross-review: one agent implements, the other reviews
