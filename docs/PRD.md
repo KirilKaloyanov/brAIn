@@ -70,7 +70,8 @@ Each requirement lists acceptance criteria (AC) that a task built from it must m
 
 - AC: Every page and API call except the sign-in and unlock flows requires a signed-in,
   unlocked device.
-- AC: How a signed-out or locked request is answered (redirect or `401`) follows OD-4.
+- AC: A signed-out visitor is sent to the sign-in page; a signed-in but locked device sees the
+  PIN screen.
 
 **FR-3 Stay signed in, sign out.**
 
@@ -105,8 +106,8 @@ Each requirement lists acceptance criteria (AC) that a task built from it must m
 
 - AC: The answer is rendered as Markdown: headings, lists, tables, links and code blocks with
   syntax highlighting.
-- AC: While waiting, the user sees that an answer is on its way. Whether the text streams in
-  or appears at once follows OD-1.
+- AC: While waiting, the user sees that an answer is on its way, and the text streams in as it
+  is generated.
 
 **FR-6 Context across turns.**
 
