@@ -6,7 +6,7 @@ Shared instructions for all AI agents (Claude, Gemini) working in this repo.
 ## Project
 
 brAIn — a full-stack TypeScript app: React frontend served by a Node backend on Google Cloud Run.
-npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Scope is not defined yet; see `docs/ROADMAP.md`.
+npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Product scope is in `docs/PRD.md`; progress is in `docs/ROADMAP.md`.
 
 ## Commands
 
