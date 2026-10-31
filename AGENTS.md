@@ -12,16 +12,17 @@ npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Produc
 
 Run from the repo root. Each runs across all workspaces.
 
-| Task      | Command                                               |
-| --------- | ----------------------------------------------------- |
-| Install   | `npm install`                                         |
-| Dev       | `npm run dev` (server with `tsx watch`, reads `.env`) |
-| Build     | `npm run build` (server → `apps/server/dist`)         |
-| Typecheck | `npm run typecheck`                                   |
-| Lint      | `npm run lint`                                        |
-| Format    | `npm run format` / `npm run format:check`             |
-| Test      | `npm test` (single run) / `npm run test:watch`        |
-| Audit     | `npm run audit`                                       |
+| Task      | Command                                                              |
+| --------- | -------------------------------------------------------------------- |
+| Install   | `npm install`                                                        |
+| Dev       | `npm run dev` (server with `tsx watch`, reads `.env`)                |
+| Dev web   | `npm run dev:web` (Vite; proxies `/api`, `/auth` to the server)      |
+| Build     | `npm run build` (web → `apps/web/dist`, server → `apps/server/dist`) |
+| Typecheck | `npm run typecheck`                                                  |
+| Lint      | `npm run lint`                                                       |
+| Format    | `npm run format` / `npm run format:check`                            |
+| Test      | `npm test` (single run) / `npm run test:watch`                       |
+| Audit     | `npm run audit`                                                      |
 
 Before proposing a commit, run `typecheck`, `lint`, `format:check`, `test` and `audit`.
 A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on staged files; it does not run typecheck or tests. Do not bypass it with `--no-verify`.
