@@ -1,0 +1,5 @@
+# Files `gcloud run deploy --source .` must not upload. Everything git ignores (.env, node_modules,
+# dist) stays local too; .dockerignore then trims the Docker build context further.
+#!include:.gitignore
+.gcloudignore
+.git

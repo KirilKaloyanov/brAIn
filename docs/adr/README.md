@@ -31,3 +31,4 @@ is built today is in `docs/architecture.md`; ADRs record the reasons behind it.
 | [0014](0014-ci-and-protected-main.md)                      | CI and a protected `main`                                | Accepted |
 | [0015](0015-agent-permission-allowlists.md)                | Agent permission allowlists                              | Accepted |
 | [0016](0016-working-with-ai-agents.md)                     | Working with AI agents                                   | Accepted |
+| [0017](0017-deploy-by-hand-with-cloud-build.md)            | Deploy by hand with Cloud Build                          | Accepted |

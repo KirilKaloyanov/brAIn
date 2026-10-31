@@ -1,0 +1,14 @@
+# Keep the build context small and free of secrets; the image builds its own node_modules and dist.
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+coverage
+.env
+.env.*
+.git
+.github
+.husky
+.claude
+.gemini
+docs
+*.log

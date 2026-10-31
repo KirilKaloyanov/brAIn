@@ -10,8 +10,8 @@ import type { Config } from './config.js';
 const config: Config = { nodeEnv: 'test', port: 8080, publicUrl: 'http://localhost:8080' };
 
 describe('createApp', () => {
-  it('answers GET /healthz with 200 and status ok', async () => {
-    const res = await request(createApp(config)).get('/healthz').expect(200);
+  it('answers GET /api/health with 200 and status ok', async () => {
+    const res = await request(createApp(config)).get('/api/health').expect(200);
     expect(res.body).toEqual({ status: 'ok' });
   });
 
@@ -52,8 +52,8 @@ describe('createApp with webDir', () => {
     await request(app).get(path).expect(404);
   });
 
-  it('still answers /healthz', async () => {
-    await request(app).get('/healthz').expect(200, { status: 'ok' });
+  it('still answers /api/health', async () => {
+    await request(app).get('/api/health').expect(200, { status: 'ok' });
   });
 });
 

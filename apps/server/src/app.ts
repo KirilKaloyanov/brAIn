@@ -13,7 +13,7 @@ export function createApp(config: Config, options: AppOptions = {}): express.Exp
   const app = express();
   app.disable('x-powered-by');
 
-  app.get('/healthz', (_req, res) => {
+  app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' } satisfies HealthResponse);
   });
 
