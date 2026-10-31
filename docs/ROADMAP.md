@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 3: Import a chat from a Markdown file — add it to `docs/PRD.md` and `docs/architecture.md`.
+Phase 3: `docs/adr/` — first ADR(s) for stack choices.
 
 ## Open decisions
 
@@ -53,6 +53,7 @@ Referenced from `docs/PRD.md` and `docs/architecture.md` as `OD-n`.
 - 2026-10-31: OD-1 resolved: answers stream to the browser as Server-Sent Events on the response of a `POST`. The server finishes and saves an answer even if the browser disconnects.
 - 2026-10-31: OD-4 resolved: a signed-out page load is redirected to `/sign-in` and a signed-out API call gets `401` (the app then goes to `/sign-in`). A locked device's API calls get `403 { code: 'locked' }` and the app shows the PIN screen.
 - 2026-10-31: Server framework is Express 5. Web app uses Vite, React Router and TanStack Query. Shared API types go in `packages/shared` (`@brain/shared`). Dependencies are added when the first task needs them.
+- 2026-10-31: Importing a chat from a Markdown file is in the MVP (FR-15). The only supported format is a gemini.google.com chat exported to Google Docs and downloaded as Markdown. An imported chat is an ordinary chat that can be continued; it only adds `importedFrom` to the chat document. The browser sends the file's text as JSON to `POST /api/chats/import` (no multipart upload, no new dependency), up to 1 MB. The parser is strict: a file that doesn't match is rejected whole, so a change in Google's format shows up as an error and the parser gets updated. Details in `docs/architecture.md` §5.1.
 
 ## Phase 1 — Foundation
 
@@ -77,7 +78,7 @@ Referenced from `docs/PRD.md` and `docs/architecture.md` as `OD-n`.
 
 - [x] `docs/PRD.md` — what the app does and for whom
 - [x] `docs/architecture.md` — modules, data flow
-- [ ] Import a chat from a Markdown file — add it to `docs/PRD.md` and `docs/architecture.md`
+- [x] Import a chat from a Markdown file — add it to `docs/PRD.md` and `docs/architecture.md`
 - [ ] `docs/adr/` — first ADR(s) for stack choices
 - [ ] Break PRD into small tasks with acceptance criteria, in the chosen task tracker
 - [ ] Move the **Decisions** log into `docs/adr/`; keep this roadmap to phases and **Next step**
