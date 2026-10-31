@@ -42,6 +42,7 @@ imported by both sides without pulling server code into the browser.
 | `app`    | Builds the Express app: middleware order, routers, static files, error handler.                                                 |
 | `auth`   | Google OAuth flow, device sessions, the `requireSession` / `requireUnlocked` middleware, PIN set/change/unlock.                 |
 | `chats`  | Chat and message routes, plus the Firestore repository for them.                                                                |
+| `import` | Parses a Gemini Markdown export into a title, source link and turns (pure function); the import route saves it as a chat.       |
 | `gemini` | Thin wrapper over `@google/genai`: builds the request, streams text, extracts sources. Behind an interface so tests use a fake. |
 | `store`  | Creates the Firestore client (emulator in development).                                                                         |
 | `index`  | Entry point: loads `config`, builds `app`, listens on `PORT`.                                                                   |
@@ -55,8 +56,8 @@ function parameters), not module imports, so unit tests can pass in fakes.
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `api`     | Typed `fetch` wrappers and the SSE reader for answers. Turns `401` into a redirect to `/sign-in` and `locked` into the PIN screen. |
 | `session` | Session state (`needs-pin`, `locked`, `unlocked`), the idle timer and the PIN screens.                                             |
-| `chat`    | Chat view: message list, Markdown rendering, composer, web search toggle, retry.                                                   |
-| `sidebar` | Chat list, new chat, delete with confirmation; collapsible on small screens.                                                       |
+| `chat`    | Chat view: message list, Markdown rendering, composer, web search toggle, retry, "Imported from Gemini" note with link.            |
+| `sidebar` | Chat list, new chat, import chat, delete with confirmation; collapsible on small screens.                                          |
 | `routes`  | React Router: `/sign-in`, `/` (new chat), `/c/:chatId`.                                                                            |
 
 Server state (chat list, messages) is cached with TanStack Query. A streaming answer is kept in
@@ -70,6 +71,7 @@ chats/{chatId}
   createdAt: Timestamp
   updatedAt: Timestamp          # last message; sidebar sorts by this, newest first
   webSearch?: boolean           # only if the toggle is per chat (OD-3)
+  importedFrom?: { kind: 'gemini-markdown', url: string | null }   # imported chats (FR-15)
 
 chats/{chatId}/messages/{messageId}
   role: 'user' | 'model'
@@ -97,6 +99,8 @@ settings/owner
 - A message is written once it is complete: the user message before calling Gemini, the answer
   after the stream ends (FR-8). A failed answer is saved with `status: 'error'` so the chat shows
   it and offers a retry (FR-7).
+- An imported chat uses the same documents as any other chat; only `importedFrom` is extra
+  (§5.1).
 - The device document ID is a hash of the cookie token, so a leaked database export can't be
   used to sign in.
 
@@ -188,6 +192,72 @@ sequenceDiagram
   the server keeps reading the Gemini stream and still saves the answer (FR-11, FR-3a). See §9
   for the Cloud Run caveat.
 
+### 5.1 Import a chat (FR-15)
+
+1. The sidebar's "Import chat" opens a file picker (`accept=".md"`). The app reads the file
+   with `File.text()` and checks its size.
+2. It sends `POST /api/chats/import { markdown }`. The file travels as JSON, not as a multipart
+   upload, so the `Origin` + JSON rule from §4.1 still protects the route and no upload library
+   is needed.
+3. The server parses the text with the `import` module, saves the chat and answers
+   `201 { chatId }`. The app refreshes the chat list and opens `/c/:chatId`.
+
+No Gemini call is made. After the import the chat is an ordinary chat: the next message goes
+through the flow in §5, and the history sent to Gemini includes the imported turns.
+
+**Parser.** A pure function, `parseGeminiExport(markdown)`, returns
+`{ title, url, turns: { prompt, response }[] }` or a format error. It expects what Google Docs
+writes when a Gemini "Export to Docs" document is downloaded as Markdown:
+
+```markdown
+# **Chat title**
+
+[https\://gemini.google.com/app/…](https://gemini.google.com/app/…)
+
+_User prompt: first question_
+
+Response: first answer, in Markdown…
+
+---
+
+_User prompt: second question_
+
+Response: …
+
+---
+```
+
+- Line endings are normalised to `\n` and a leading BOM is dropped.
+- **Title:** the first `# ` heading, with the surrounding `**` removed. Required.
+- **Link:** the first link to `https://gemini.google.com/` before the first turn. Optional.
+- **Turns:** a turn starts at a line beginning `*User prompt: `. The prompt runs to the closing
+  `*`, which may be on a later line. The answer starts after `Response: ` and runs to a `---`
+  line that is followed by the next turn or the end of the file, so a `---` inside an answer is
+  kept.
+- **Escapes:** Google Docs escapes Markdown characters (`\:`, `\.`, `\+`, `\=`). They are
+  removed from the title and prompts, which are shown as plain text. Answers are kept as
+  written, because a Markdown renderer already shows the escapes correctly.
+- **Strict:** if the file has no title or no turns, or a turn has an empty prompt or no
+  `Response:`, the whole file is rejected with `400 { code: 'import-format' }` and the number
+  of the turn that failed. An unexpected file, or a change in Google's export format, fails
+  loudly instead of saving a broken chat. The parser is then updated for the new format.
+
+**Saving.**
+
+- The chat gets `title` from the heading, `importedFrom: { kind: 'gemini-markdown', url }`,
+  and `createdAt` / `updatedAt` set to the import time, so it shows first in the sidebar. The
+  title step from OD-2 is skipped.
+- Each turn becomes a `user` and a `model` message with `status: 'complete'`,
+  `webSearch: false` and no `sources` (the export has none). The export has no timestamps, so
+  the messages get the import time plus 1 ms per message, which keeps them in order.
+- Firestore batches hold at most 500 writes, so messages are written in batches and the chat
+  document goes in the last one. A chat with no chat document is never listed, so a failed
+  import doesn't show. On failure the server deletes what was written with `recursiveDelete`.
+- **Size:** at most 1 MB of Markdown, checked by the app before sending and by the server
+  (`413 { code: 'import-too-large' }`). This keeps every message well under Firestore's 1 MiB
+  document limit. The import route's JSON body limit is raised to match; other routes keep the
+  default.
+
 ## 6. HTTP API
 
 All bodies are JSON unless noted. All `/api/*` routes need a signed-in, unlocked device unless
@@ -208,6 +278,7 @@ marked otherwise.
 | `GET /api/chats/:id`           | One chat with all its messages                                                 |
 | `POST /api/chats/:id/messages` | Send a message; response is `text/event-stream` (`:id` may be `new`)           |
 | `POST /api/chats/:id/retry`    | Retry the last failed answer; `text/event-stream`                              |
+| `POST /api/chats/import`       | `{ markdown }` → `201 { chatId }`; import a Gemini export (§5.1)               |
 | `DELETE /api/chats/:id`        | Delete a chat and its messages                                                 |
 | `GET /*` (anything else)       | The SPA's `index.html`, after the guard in §4.2                                |
 
@@ -235,6 +306,8 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
 - **Tests.** Vitest, as today. Server route tests use `supertest`-style requests against the
   Express app with a fake Gemini client and the Firestore emulator (or an in-memory fake
   repository). Web tests use jsdom and Testing Library. No test calls the real Gemini API.
+  The import parser is tested against made-up fixture files in the Gemini export format, not
+  the owner's real chats.
 - **Build.** `npm run build` builds `@brain/web` to `apps/web/dist` and `@brain/server` to
   `apps/server/dist`; the server serves the web build as static files.
 - **Container.** A multi-stage `Dockerfile`: install and build, then copy only `dist` folders and
@@ -255,6 +328,8 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
   chat document stores it too.
 - **OD-5 (spending cap).** If a cap is chosen, it is a check in the `chats` routes before calling
   Gemini, with a counter document in Firestore.
+- **Import format.** Google's export format is not documented and can change. The strict parser
+  (§5.1) makes a change show up as an import error, not as a broken chat.
 - **Post-MVP memory.** Vector search over memories and axioms can use Firestore vector search, so
   it can live in the same database. It would add a module next to `chats` that adds context
   before the Gemini call.

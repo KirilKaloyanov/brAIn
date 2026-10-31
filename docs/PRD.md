@@ -27,13 +27,15 @@ and want:
 - Multi-turn chat with Gemini, with formatted (Markdown) answers.
 - Conversations are saved and can be listed, resumed and deleted.
 - Web search grounding that the user can switch on and off, with sources shown.
+- Chats exported from gemini.google.com as Markdown can be imported and continued.
 - Usable on phone-sized screens.
 
 ### Non-goals (MVP)
 
 - More than one user, sign-up or sharing.
 - Memory extracted from past chats (planned post-MVP, §7).
-- Choosing between models, file or image uploads (post-MVP, §7).
+- Choosing between models, file or image attachments in a message (post-MVP, §7).
+- Importing from any source other than a Gemini Markdown export (FR-15).
 - Native mobile apps.
 - Plugins or tools other than web search.
 
@@ -51,6 +53,9 @@ and want:
 6. **Unlock after a break.** The owner comes back after more than 30 minutes away. The app is
    locked; they enter their PIN and carry on where they left off.
 7. **Sign out.** The owner signs out; the app asks them to sign in with Google again.
+8. **Import a chat.** The owner exports a chat from gemini.google.com to Google Docs, downloads
+   it as Markdown, picks the file in brAIn and lands in the imported chat. They ask a
+   follow-up, and the answer takes the imported messages into account.
 
 ## 5. Functional requirements
 
@@ -166,6 +171,28 @@ Each requirement lists acceptance criteria (AC) that a task built from it must m
 
 - AC: When an answer used web search, its sources are listed under it as links.
 - AC: Sources are saved with the answer and shown again when the chat is reopened.
+
+### 5.5 Import
+
+**FR-15 Import a chat from a Markdown file.**
+
+The supported file is a Gemini chat exported to Google Docs ("Export to Docs" on
+gemini.google.com) and downloaded as Markdown (File → Download → Markdown). It has a `#` title,
+a link back to the Gemini chat, and turns separated by `---`, each made of an
+`*User prompt: …*` line and a `Response: …` block. No other format is supported in the MVP.
+
+- AC: An "Import chat" action in the sidebar opens a file picker for `.md` files.
+- AC: A valid file becomes a new chat with every prompt and answer in their original order;
+  the app opens it.
+- AC: The chat's title is the file's `#` heading.
+- AC: Answers keep their Markdown formatting (headings, lists, tables).
+- AC: An imported chat behaves like any other: it shows in the sidebar, can be continued and
+  deleted, and follow-ups take the imported messages into account.
+- AC: The imported chat shows that it came from Gemini, with the link to the original chat
+  when the file has one.
+- AC: A file that does not match the format, or is too large, is rejected with a clear
+  message, and nothing is saved. A file is never partly imported.
+- AC: Importing the same file twice creates two chats.
 
 ## 6. Non-functional requirements
 
