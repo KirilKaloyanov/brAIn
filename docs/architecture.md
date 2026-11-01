@@ -113,30 +113,38 @@ settings/owner
 
 ### 4.1 Sign in (FR-1, FR-3)
 
-1. `GET /auth/google` sets a short-lived `state` cookie and redirects to Google's consent screen
-   (scopes `openid email`).
-2. Google redirects to `GET /auth/google/callback`. The server checks `state`, exchanges the code
-   for tokens, verifies the ID token and requires `email_verified` and
-   `email === ALLOWED_EMAIL`.
+1. `GET /auth/google` sets a random `state` in the cookie `__Host-oauth-state` (10 minutes) and
+   redirects to Google's consent screen (scopes `openid email`, account chooser shown).
+2. Google redirects to `GET /auth/google/callback`. The server checks `state` against the cookie
+   (and clears it), exchanges the code for tokens, verifies the ID token and requires
+   `email_verified` and `email === ALLOWED_EMAIL` (ignoring case).
 3. On a match it creates a random 256-bit session token, stores `devices/{hash}` and sets the
    cookie `__Host-session` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, `Max-Age` 15 days).
-   On a mismatch it redirects to `/sign-in?error=denied` and stores nothing.
+   On a mismatch it redirects to `/sign-in?error=denied` and stores nothing. A bad or missing
+   `state`, a missing code (sign-in cancelled on Google) or a failed code exchange redirects to
+   `/sign-in?error=failed`.
 4. It redirects to `/`. If no PIN is set yet, the app shows the set-PIN screen.
 
+Each sign-in creates a new device, so other devices stay signed in. Browsers accept `Secure`
+cookies from `http://localhost`, so the same cookies work in development.
+
 `SameSite=Lax` (not `Strict`) is needed because the redirect back from Google is a cross-site
-navigation. State-changing requests are additionally protected by checking the `Origin` header
-against the app's own origin and only accepting `application/json` bodies.
+navigation. State-changing requests (anything but `GET`, `HEAD`, `OPTIONS`) are additionally
+protected: the `Origin` header must equal `PUBLIC_URL` (else `403 { code: 'bad-origin' }`), and a
+request with a `Content-Type` or a body must be `application/json` (else
+`415 { code: 'json-required' }`), which a cross-site HTML form can't send. A request without a
+body, like a bodyless `fetch`, passes.
 
 ### 4.2 Request guard (FR-2, OD-4)
 
 Every request except `/auth/*`, `/sign-in` and static assets passes through `requireSession`:
 
-| Condition                            | Page load (`GET` HTML)   | API call (`/api/*`)            |
-| ------------------------------------ | ------------------------ | ------------------------------ |
-| No cookie, unknown or expired device | `302` to `/sign-in`      | `401`; app goes to `/sign-in`  |
-| Signed in, no PIN set yet            | serve app; shows set-PIN | `403 { code: 'pin-required' }` |
-| Signed in, idle > 30 min (locked)    | serve app; shows PIN     | `403 { code: 'locked' }`       |
-| Signed in and unlocked               | serve app                | handled                        |
+| Condition                            | Page load (`GET` HTML)   | API call (`/api/*`)                                  |
+| ------------------------------------ | ------------------------ | ---------------------------------------------------- |
+| No cookie, unknown or expired device | `302` to `/sign-in`      | `401 { code: 'signed-out' }`; app goes to `/sign-in` |
+| Signed in, no PIN set yet            | serve app; shows set-PIN | `403 { code: 'pin-required' }`                       |
+| Signed in, idle > 30 min (locked)    | serve app; shows PIN     | `403 { code: 'locked' }`                             |
+| Signed in and unlocked               | serve app                | handled                                              |
 
 The server is the authority on the lock: a device is locked when
 `now - lastActiveAt > 30 min`. Each handled API request updates `lastActiveAt` (written at most

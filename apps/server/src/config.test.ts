@@ -6,9 +6,16 @@ const valid = {
   PORT: '8080',
   PUBLIC_URL: 'https://brain.example.com',
   GOOGLE_CLOUD_PROJECT: 'brain-kk',
+  ALLOWED_EMAIL: 'owner@example.com',
+  GOOGLE_CLIENT_ID: '123-abc.apps.googleusercontent.com',
+  GOOGLE_CLIENT_SECRET: 'top-secret',
 };
 
 describe('loadConfig', () => {
+  it('never puts GOOGLE_CLIENT_SECRET in an error message', () => {
+    expect(() => loadConfig({ ...valid, PORT: 'x' })).not.toThrow(/top-secret/);
+  });
+
   it('reads valid variables', () => {
     expect(loadConfig(valid)).toEqual({
       nodeEnv: 'production',
@@ -16,7 +23,16 @@ describe('loadConfig', () => {
       publicUrl: 'https://brain.example.com',
       googleCloudProject: 'brain-kk',
       firestoreEmulatorHost: undefined,
+      allowedEmail: 'owner@example.com',
+      googleClientId: '123-abc.apps.googleusercontent.com',
+      googleClientSecret: 'top-secret',
     });
+  });
+
+  it('lowercases ALLOWED_EMAIL', () => {
+    expect(loadConfig({ ...valid, ALLOWED_EMAIL: 'Owner@Example.com' }).allowedEmail).toBe(
+      'owner@example.com',
+    );
   });
 
   it('reads FIRESTORE_EMULATOR_HOST outside production', () => {
@@ -69,6 +85,17 @@ describe('loadConfig', () => {
     ['GOOGLE_CLOUD_PROJECT', 'brain-', 'got "brain-"'],
     ['FIRESTORE_EMULATOR_HOST', 'http://localhost:8081', 'must be host:port'],
     ['FIRESTORE_EMULATOR_HOST', 'localhost', 'got "localhost"'],
+    ['ALLOWED_EMAIL', undefined, 'ALLOWED_EMAIL must be an email address, got ""'],
+    ['ALLOWED_EMAIL', 'owner', 'got "owner"'],
+    ['ALLOWED_EMAIL', 'owner @example.com', 'got "owner @example.com"'],
+    [
+      'GOOGLE_CLIENT_ID',
+      undefined,
+      'GOOGLE_CLIENT_ID must end in .apps.googleusercontent.com, got ""',
+    ],
+    ['GOOGLE_CLIENT_ID', 'abc.example.com', 'got "abc.example.com"'],
+    ['GOOGLE_CLIENT_SECRET', undefined, 'GOOGLE_CLIENT_SECRET must be set'],
+    ['GOOGLE_CLIENT_SECRET', '', 'GOOGLE_CLIENT_SECRET must be set'],
   ])('rejects %s=%s', (name, value, message) => {
     expect(() => loadConfig({ ...valid, [name]: value })).toThrow(ConfigError);
     expect(() => loadConfig({ ...valid, [name]: value })).toThrow(message);
@@ -76,7 +103,7 @@ describe('loadConfig', () => {
 
   it('lists every problem at once', () => {
     expect(() => loadConfig({})).toThrow(
-      /NODE_ENV must[\s\S]*PORT must[\s\S]*PUBLIC_URL must[\s\S]*GOOGLE_CLOUD_PROJECT must/,
+      /NODE_ENV must[\s\S]*PORT must[\s\S]*PUBLIC_URL must[\s\S]*GOOGLE_CLOUD_PROJECT must[\s\S]*ALLOWED_EMAIL must[\s\S]*GOOGLE_CLIENT_ID must[\s\S]*GOOGLE_CLIENT_SECRET must/,
     );
   });
 });
