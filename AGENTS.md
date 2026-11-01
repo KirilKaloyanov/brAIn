@@ -6,23 +6,25 @@ Shared instructions for all AI agents (Claude, Gemini) working in this repo.
 ## Project
 
 brAIn — a full-stack TypeScript app: React frontend served by a Node backend on Google Cloud Run.
-npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Product scope is in `docs/PRD.md`; design in `docs/architecture.md`; the reasons for decisions in `docs/adr/`; progress in `docs/ROADMAP.md`.
+npm workspaces monorepo (`apps/*`, `packages/*`), Node 24 (see `.nvmrc`). Product scope is in `docs/PRD.md`; design in `docs/architecture.md`; machine setup in `docs/development.md`; the reasons for decisions in `docs/adr/`; progress in `docs/ROADMAP.md`.
 
 ## Commands
 
 Run from the repo root. Each runs across all workspaces.
 
-| Task      | Command                                                              |
-| --------- | -------------------------------------------------------------------- |
-| Install   | `npm install`                                                        |
-| Dev       | `npm run dev` (server with `tsx watch`, reads `.env`)                |
-| Dev web   | `npm run dev:web` (Vite; proxies `/api`, `/auth` to the server)      |
-| Build     | `npm run build` (web → `apps/web/dist`, server → `apps/server/dist`) |
-| Typecheck | `npm run typecheck`                                                  |
-| Lint      | `npm run lint`                                                       |
-| Format    | `npm run format` / `npm run format:check`                            |
-| Test      | `npm test` (single run) / `npm run test:watch`                       |
-| Audit     | `npm run audit`                                                      |
+| Task      | Command                                                                  |
+| --------- | ------------------------------------------------------------------------ |
+| Install   | `npm install`                                                            |
+| Dev       | `npm run dev` (server with `tsx watch`, reads `.env`)                    |
+| Dev web   | `npm run dev:web` (Vite; proxies `/api`, `/auth` to the server)          |
+| Build     | `npm run build` (web → `apps/web/dist`, server → `apps/server/dist`)     |
+| Typecheck | `npm run typecheck`                                                      |
+| Lint      | `npm run lint`                                                           |
+| Format    | `npm run format` / `npm run format:check`                                |
+| Emulator  | `npm run emulator` (Firestore emulator for `dev`, port 8081)             |
+| Test      | `npm test` (single run) / `npm run test:watch`                           |
+| Test all  | `npm run test:emulator` (also emulator tests; needs Java + Firebase CLI) |
+| Audit     | `npm run audit`                                                          |
 
 Before proposing a commit, run `typecheck`, `lint`, `format:check`, `test` and `audit`.
 A pre-commit hook (husky + lint-staged) also runs ESLint `--fix` and Prettier on staged files; it does not run typecheck or tests. Do not bypass it with `--no-verify`.

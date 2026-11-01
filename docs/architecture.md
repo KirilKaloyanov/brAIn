@@ -323,18 +323,21 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
 | `GOOGLE_CLIENT_SECRET`    | OAuth client secret                               | Secret Manager    |
 | `GEMINI_API_KEY`          | Gemini API key                                    | Secret Manager    |
 | `GEMINI_MODEL`            | Model name: `gemini-3.8-flash` (quota set, §8)    | env               |
-| `GOOGLE_CLOUD_PROJECT`    | Firestore project                                 | Cloud Run         |
-| `FIRESTORE_EMULATOR_HOST` | Use the local emulator (development only)         | —                 |
+| `GOOGLE_CLOUD_PROJECT`    | Firestore project                                 | env               |
+| `FIRESTORE_EMULATOR_HOST` | Emulator `host:port`; rejected in production      | —                 |
 
 ## 8. Development, testing and deployment
 
 - **Local.** `vite` (`npm run dev:web`) serves the web app with hot reload and proxies `/api`
   and `/auth` to the Express server (`npm run dev`, on `PORT` from `.env`), which runs with
-  `tsx watch` against the Firestore emulator. Google sign-in works locally with an OAuth client
+  `tsx watch` against the Firestore emulator (`npm run emulator`, project `demo-brain`, port
+  8081; setup in `docs/development.md`). Google sign-in works locally with an OAuth client
   that allows `http://localhost` redirects.
 - **Tests.** Vitest, as today. Server route tests use `supertest`-style requests against the
   Express app with a fake Gemini client and the Firestore emulator (or an in-memory fake
-  repository). Web tests use jsdom and Testing Library. No test calls the real Gemini API.
+  repository). Tests that need the emulator skip under plain `npm test`;
+  `npm run test:emulator` starts it, runs every test and stops it. CI always runs that, so the
+  emulator tests never skip there (ADR-0018). Web tests use jsdom and Testing Library. No test calls the real Gemini API.
   The import parser is tested against made-up fixture files in the Gemini export format, not
   the owner's real chats.
 - **Build.** `npm run build` builds `@brain/web` to `apps/web/dist` and `@brain/server` to

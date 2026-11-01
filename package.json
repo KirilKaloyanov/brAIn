@@ -20,6 +20,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:emulator": "firebase emulators:exec --only firestore --project demo-brain \"npm test\"",
+    "emulator": "firebase emulators:start --only firestore --project demo-brain",
     "audit": "npm audit --omit=dev --audit-level=high",
     "prepare": "husky"
   },

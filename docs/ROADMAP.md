@@ -4,7 +4,7 @@ Hand-off file between sessions. Keep it current.
 
 ## Next step
 
-Phase 4: #24–#27 are done (server and web skeletons, `@brain/shared`, Cloud Run deployment, see `docs/deploy.md`); next is #28 (Firestore client and emulator). Implement issues in order, one per branch/PR; each issue lists what it depends on.
+Phase 4: #24–#28 are done (server and web skeletons, `@brain/shared`, Cloud Run deployment, see `docs/deploy.md`; Firestore client and emulator, see `docs/development.md`); next is #29. Implement issues in order, one per branch/PR; each issue lists what it depends on.
 
 ## Open decisions
 
