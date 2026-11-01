@@ -7,7 +7,13 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { createApp, errorHandler } from './app.js';
 import type { Config } from './config.js';
 
-const config: Config = { nodeEnv: 'test', port: 8080, publicUrl: 'http://localhost:8080' };
+const config: Config = {
+  nodeEnv: 'test',
+  port: 8080,
+  publicUrl: 'http://localhost:8080',
+  googleCloudProject: 'demo-brain',
+  firestoreEmulatorHost: undefined,
+};
 
 describe('createApp', () => {
   it('answers GET /api/health with 200 and status ok', async () => {

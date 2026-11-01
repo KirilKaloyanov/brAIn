@@ -10,6 +10,10 @@ export interface Config {
   port: number;
   /** App origin, e.g. `https://brain.example.com`, without a trailing slash. */
   publicUrl: string;
+  /** Google Cloud project that holds the Firestore database. */
+  googleCloudProject: string;
+  /** `host:port` of the Firestore emulator; development and tests only. */
+  firestoreEmulatorHost: string | undefined;
 }
 
 export class ConfigError extends Error {
@@ -49,9 +53,33 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     );
   }
 
-  // Same as problems.length > 0, but lets TypeScript see that every value is defined below.
-  if (nodeEnv === undefined || port === undefined || publicUrl === undefined) {
+  // Google's format: 6–30 lowercase letters, digits or hyphens, starting with a letter.
+  const googleCloudProject = /^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(env.GOOGLE_CLOUD_PROJECT ?? '')
+    ? env.GOOGLE_CLOUD_PROJECT
+    : undefined;
+  if (googleCloudProject === undefined) {
+    problems.push(
+      `GOOGLE_CLOUD_PROJECT must be a Google Cloud project ID, got "${env.GOOGLE_CLOUD_PROJECT ?? ''}"`,
+    );
+  }
+
+  // Empty counts as unset. In production the data would go to the emulator instead of Firestore.
+  const firestoreEmulatorHost = env.FIRESTORE_EMULATOR_HOST || undefined;
+  if (firestoreEmulatorHost !== undefined && !/^[\w.-]+:\d+$/.test(firestoreEmulatorHost)) {
+    problems.push(`FIRESTORE_EMULATOR_HOST must be host:port, got "${firestoreEmulatorHost}"`);
+  } else if (firestoreEmulatorHost !== undefined && nodeEnv === 'production') {
+    problems.push('FIRESTORE_EMULATOR_HOST must not be set in production');
+  }
+
+  // The undefined checks let TypeScript see that every value is defined below.
+  if (
+    problems.length > 0 ||
+    nodeEnv === undefined ||
+    port === undefined ||
+    publicUrl === undefined ||
+    googleCloudProject === undefined
+  ) {
     throw new ConfigError(`Invalid configuration:\n${problems.map((p) => `- ${p}`).join('\n')}`);
   }
-  return { nodeEnv, port, publicUrl };
+  return { nodeEnv, port, publicUrl, googleCloudProject, firestoreEmulatorHost };
 }

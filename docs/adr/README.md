@@ -32,3 +32,4 @@ is built today is in `docs/architecture.md`; ADRs record the reasons behind it.
 | [0015](0015-agent-permission-allowlists.md)                | Agent permission allowlists                              | Accepted |
 | [0016](0016-working-with-ai-agents.md)                     | Working with AI agents                                   | Accepted |
 | [0017](0017-deploy-by-hand-with-cloud-build.md)            | Deploy by hand with Cloud Build                          | Accepted |
+| [0018](0018-firestore-emulator-in-tests-and-ci.md)         | The Firestore emulator in tests and CI                   | Accepted |

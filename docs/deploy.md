@@ -28,7 +28,7 @@ Then in a terminal:
 
 ```sh
 # Defaults for later commands; stored for your user, not in the repo.
-gcloud config set project <project-id>
+gcloud config set project brain-kk
 gcloud config set run/region europe-west1
 
 # APIs for deploying from source.
@@ -36,6 +36,17 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregi
 
 # The app's own service account. Roles (Firestore, secrets) are granted as features need them.
 gcloud iam service-accounts create brain-run --display-name "brAIn Cloud Run"
+```
+
+### Firestore
+
+One Firestore database in Native mode, named `(default)`, in the service's region. The service
+account reads and writes it with `roles/datastore.user` (architecture §8).
+
+```sh
+gcloud services enable firestore.googleapis.com
+gcloud firestore databases create --location=europe-west1
+gcloud projects add-iam-policy-binding brain-kk --member=serviceAccount:brain-run@brain-kk.iam.gserviceaccount.com --role=roles/datastore.user
 ```
 
 ### Spending limits
@@ -54,10 +65,10 @@ gcloud services enable generativelanguage.googleapis.com
 gcloud components install alpha
 
 # Per minute, project-wide, every model.
-gcloud alpha services quota update --service=generativelanguage.googleapis.com --consumer=projects/<project-id> --metric=generativelanguage.googleapis.com/generate_content_requests --unit='1/min/{project}/{region}' --value=10 --force
+gcloud alpha services quota update --service=generativelanguage.googleapis.com --consumer=projects/brain-kk --metric=generativelanguage.googleapis.com/generate_content_requests --unit='1/min/{project}/{region}' --value=10 --force
 
 # Per day, per model: repeat for a new GEMINI_MODEL.
-gcloud alpha services quota update --service=generativelanguage.googleapis.com --consumer=projects/<project-id> --metric=generativelanguage.googleapis.com/generate_requests_per_model_per_day --unit='1/d/{project}/{model}' --dimensions=model=gemini-3.8-flash --value=300 --force
+gcloud alpha services quota update --service=generativelanguage.googleapis.com --consumer=projects/brain-kk --metric=generativelanguage.googleapis.com/generate_requests_per_model_per_day --unit='1/d/{project}/{model}' --dimensions=model=gemini-3.8-flash --value=300 --force
 ```
 
 ## Deploy
@@ -70,7 +81,7 @@ that CI never checked.
 git switch main
 git pull
 git status   # must show a clean working tree
-gcloud run deploy brain --source . --service-account brain-run@<project-id>.iam.gserviceaccount.com --allow-unauthenticated --min-instances 0 --max-instances 2 --cpu-throttling --timeout 300 --set-env-vars PUBLIC_URL=https://brain-<project-number>.europe-west1.run.app
+gcloud run deploy brain --source . --service-account brain-run@brain-kk.iam.gserviceaccount.com --allow-unauthenticated --min-instances 0 --max-instances 2 --cpu-throttling --timeout 300 --set-env-vars PUBLIC_URL=https://brain-955911433585.europe-west1.run.app,GOOGLE_CLOUD_PROJECT=brain-kk
 ```
 
 - `--allow-unauthenticated`: the service is public; the app does its own Google sign-in.
@@ -78,6 +89,9 @@ gcloud run deploy brain --source . --service-account brain-run@<project-id>.iam.
 - `--cpu-throttling`: request-based billing (CPU only during requests, architecture §9).
 - `--timeout 300`: 5 minutes, so long answers can finish.
 - `PUBLIC_URL`: the service's fixed URL, `https://<service>-<project-number>.<region>.run.app`.
+- `GOOGLE_CLOUD_PROJECT`: the project that holds Firestore. Cloud Run doesn't set it.
+- `--set-env-vars` replaces every variable on the service. To add or change one on a deployed
+  service, use `gcloud run services update brain --update-env-vars NAME=value`.
 
 The first deploy asks to create an Artifact Registry repository (`cloud-run-source-deploy`) for
 the built images; answer yes. Later deploys keep the flags set before, so a plain
@@ -97,7 +111,7 @@ console, which has Docker installed. From the repo root:
 
 ```sh
 docker build -t brain .
-docker run --rm -p 8080:8080 -e PUBLIC_URL=http://localhost:8080 brain
+docker run --rm -p 8080:8080 -e PUBLIC_URL=http://localhost:8080 -e GOOGLE_CLOUD_PROJECT=demo-brain brain
 ```
 
 The web app is then on port 8080 (Cloud Shell: **Web Preview** → port 8080), and `/api/health`
