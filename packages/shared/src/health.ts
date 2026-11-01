@@ -1,4 +1,4 @@
-/** Body of `GET /healthz`. */
+/** Body of `GET /api/health`. */
 export interface HealthResponse {
   status: 'ok';
 }

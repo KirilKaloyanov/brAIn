@@ -291,6 +291,7 @@ marked otherwise.
 
 | Method & path                  | Purpose                                                                        |
 | ------------------------------ | ------------------------------------------------------------------------------ |
+| `GET /api/health`              | `{ status: 'ok' }` (public)                                                    |
 | `GET /auth/google`             | Start Google sign-in (public)                                                  |
 | `GET /auth/google/callback`    | Finish sign-in, set cookie (public)                                            |
 | `POST /auth/sign-out`          | Delete device, clear cookie (signed in)                                        |
@@ -314,13 +315,14 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
 
 | Variable                  | Purpose                                           | Production source |
 | ------------------------- | ------------------------------------------------- | ----------------- |
-| `NODE_ENV`, `PORT`        | Runtime mode, listen port                         | Cloud Run         |
+| `NODE_ENV`                | Runtime mode                                      | `Dockerfile`      |
+| `PORT`                    | Listen port                                       | Cloud Run         |
 | `PUBLIC_URL`              | App origin; OAuth redirect URL and `Origin` check | env               |
 | `ALLOWED_EMAIL`           | The owner's Google account                        | env               |
 | `GOOGLE_CLIENT_ID`        | OAuth client                                      | env               |
 | `GOOGLE_CLIENT_SECRET`    | OAuth client secret                               | Secret Manager    |
 | `GEMINI_API_KEY`          | Gemini API key                                    | Secret Manager    |
-| `GEMINI_MODEL`            | Model name, e.g. a Flash model                    | env               |
+| `GEMINI_MODEL`            | Model name: `gemini-3.8-flash` (quota set, §8)    | env               |
 | `GOOGLE_CLOUD_PROJECT`    | Firestore project                                 | Cloud Run         |
 | `FIRESTORE_EMULATOR_HOST` | Use the local emulator (development only)         | —                 |
 
@@ -340,18 +342,26 @@ Read by the `config` module; examples go in `.env.example` as each one is first 
   and answers any other `GET` outside `/api` and `/auth` with its `index.html` (SPA fallback).
 - **Container.** A multi-stage `Dockerfile`: install and build, then copy only `dist` folders and
   production dependencies into a `node:24-slim` image that runs `node apps/server/dist/index.js`.
+  Cloud Build builds it on deploy (`gcloud run deploy --source .`), so no local Docker is needed.
+- **Deploy.** By hand, from an up-to-date `main` after CI passes; steps and rollback are in
+  `docs/deploy.md`.
 - **Cloud Run.** Its own service account with Firestore access (`roles/datastore.user`) and
   access to the two secrets. Request timeout raised (e.g. 5 minutes) so long answers can finish.
   Minimum instances 0; the performance target in PRD §6 allows for a cold start. Billing stays
   request-based (CPU only during requests), see §9.
 - **Spending limits (PRD §6 Cost).** Set in the Google Cloud console, not in the app:
   - a monthly budget on the billing account with email alerts at 50%, 90% and 100%. It covers
-    the whole project, but only warns and never stops spending;
-  - lowered requests-per-minute and requests-per-day quotas on the Generative Language API for
-    the project. This is the hard stop, and it also holds if the API key leaks.
+    the whole project, but only warns and never stops spending. The owner's existing
+    all-projects budget on the billing account serves; it is shared with their other projects;
+  - lowered request quotas on the Gemini API (`generativelanguage.googleapis.com`, once shown as
+    "Generative Language API") for the project. This is the hard stop, and it also holds if the
+    API key leaks. Set values:
+    - `generate_content_requests`: **10 per minute**, project-wide, every model and tier;
+    - `generate_requests_per_model_per_day`: **300 per day** for `gemini-3.8-flash`. This quota
+      exists only per model, so it must be set again if `GEMINI_MODEL` changes.
 
   Gemini then answers with a quota error, which becomes an `error` event like any other (§5,
-  FR-7). The chosen values are written down here once they are set.
+  FR-7). Commands are in `docs/deploy.md`.
 
 ## 9. Risks and open points
 
