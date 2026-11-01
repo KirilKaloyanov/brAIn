@@ -49,6 +49,35 @@ gcloud firestore databases create --location=europe-west1
 gcloud projects add-iam-policy-binding brain-kk --member=serviceAccount:brain-run@brain-kk.iam.gserviceaccount.com --role=roles/datastore.user
 ```
 
+### Google sign-in
+
+The OAuth client is created as in `docs/development.md` (**Google sign-in**), with the Cloud Run
+redirect URI. Its secret lives in Secret Manager, which the service reads at startup:
+
+1. Enable the API: `gcloud services enable secretmanager.googleapis.com`.
+2. ☰ → **Security** → **Secret Manager** → **Create secret**: name `google-client-secret`, value
+   the client secret. Pasting it in the console avoids a stray newline from the shell.
+3. Let the service account read it:
+
+```sh
+gcloud secrets add-iam-policy-binding google-client-secret --member=serviceAccount:brain-run@brain-kk.iam.gserviceaccount.com --role=roles/secretmanager.secretAccessor
+```
+
+The service already deployed without sign-in needs the new settings before the first deploy
+that includes it, or the new revision fails to start (the config check stops it) and traffic
+stays on the old one. Keep the quotes: PowerShell turns an unquoted `a,b` into `a b`, which
+puts both variables into the first one.
+
+```sh
+gcloud run services update brain --update-env-vars "ALLOWED_EMAIL=<your email>,GOOGLE_CLIENT_ID=<client id>" --set-secrets GOOGLE_CLIENT_SECRET=google-client-secret:latest
+```
+
+Check that each variable is a separate entry:
+
+```sh
+gcloud run services describe brain --format="yaml(spec.template.spec.containers[0].env)"
+```
+
 ### Spending limits
 
 Values and reasons are in `docs/architecture.md` §8.
@@ -81,7 +110,7 @@ that CI never checked.
 git switch main
 git pull
 git status   # must show a clean working tree
-gcloud run deploy brain --source . --service-account brain-run@brain-kk.iam.gserviceaccount.com --allow-unauthenticated --min-instances 0 --max-instances 2 --cpu-throttling --timeout 300 --set-env-vars PUBLIC_URL=https://brain-955911433585.europe-west1.run.app,GOOGLE_CLOUD_PROJECT=brain-kk
+gcloud run deploy brain --source . --service-account brain-run@brain-kk.iam.gserviceaccount.com --allow-unauthenticated --min-instances 0 --max-instances 2 --cpu-throttling --timeout 300 --set-env-vars "PUBLIC_URL=https://brain-955911433585.europe-west1.run.app,GOOGLE_CLOUD_PROJECT=brain-kk,ALLOWED_EMAIL=<your email>,GOOGLE_CLIENT_ID=<client id>" --set-secrets GOOGLE_CLIENT_SECRET=google-client-secret:latest
 ```
 
 - `--allow-unauthenticated`: the service is public; the app does its own Google sign-in.
@@ -90,6 +119,10 @@ gcloud run deploy brain --source . --service-account brain-run@brain-kk.iam.gser
 - `--timeout 300`: 5 minutes, so long answers can finish.
 - `PUBLIC_URL`: the service's fixed URL, `https://<service>-<project-number>.<region>.run.app`.
 - `GOOGLE_CLOUD_PROJECT`: the project that holds Firestore. Cloud Run doesn't set it.
+- `ALLOWED_EMAIL`, `GOOGLE_CLIENT_ID`: the owner's Google account and the OAuth client.
+- `--set-secrets`: `GOOGLE_CLIENT_SECRET` from Secret Manager; `latest` is read when an instance
+  starts, so a new secret version needs a new revision (any deploy or `services update`).
+- The quotes around the `--set-env-vars` list keep PowerShell from splitting it at the commas.
 - `--set-env-vars` replaces every variable on the service. To add or change one on a deployed
   service, use `gcloud run services update brain --update-env-vars NAME=value`.
 
@@ -111,8 +144,9 @@ console, which has Docker installed. From the repo root:
 
 ```sh
 docker build -t brain .
-docker run --rm -p 8080:8080 -e PUBLIC_URL=http://localhost:8080 -e GOOGLE_CLOUD_PROJECT=demo-brain brain
+docker run --rm -p 8080:8080 -e PUBLIC_URL=http://localhost:8080 -e GOOGLE_CLOUD_PROJECT=demo-brain -e ALLOWED_EMAIL=you@example.com -e GOOGLE_CLIENT_ID=test.apps.googleusercontent.com -e GOOGLE_CLIENT_SECRET=test brain
 ```
 
-The web app is then on port 8080 (Cloud Shell: **Web Preview** → port 8080), and `/api/health`
-answers `{"status":"ok"}`.
+`/api/health` then answers `{"status":"ok"}` on port 8080 (Cloud Shell: **Web Preview** → port
+8080), and `/sign-in` serves the web app. Without Firestore and a real OAuth client, signing in
+doesn't work there.

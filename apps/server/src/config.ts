@@ -14,6 +14,11 @@ export interface Config {
   googleCloudProject: string;
   /** `host:port` of the Firestore emulator; development and tests only. */
   firestoreEmulatorHost: string | undefined;
+  /** The owner's Google account, lowercased: the only one allowed to sign in. */
+  allowedEmail: string;
+  /** OAuth client for Google sign-in. */
+  googleClientId: string;
+  googleClientSecret: string;
 }
 
 export class ConfigError extends Error {
@@ -71,15 +76,50 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     problems.push('FIRESTORE_EMULATOR_HOST must not be set in production');
   }
 
+  // Lowercased, because Google account addresses don't depend on case.
+  const allowedEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.ALLOWED_EMAIL ?? '')
+    ? env.ALLOWED_EMAIL?.toLowerCase()
+    : undefined;
+  if (allowedEmail === undefined) {
+    problems.push(`ALLOWED_EMAIL must be an email address, got "${env.ALLOWED_EMAIL ?? ''}"`);
+  }
+
+  const googleClientId = /^[\w-]+\.apps\.googleusercontent\.com$/.test(env.GOOGLE_CLIENT_ID ?? '')
+    ? env.GOOGLE_CLIENT_ID
+    : undefined;
+  if (googleClientId === undefined) {
+    problems.push(
+      `GOOGLE_CLIENT_ID must end in .apps.googleusercontent.com, got "${env.GOOGLE_CLIENT_ID ?? ''}"`,
+    );
+  }
+
+  // Never echo the secret in the message.
+  const googleClientSecret = env.GOOGLE_CLIENT_SECRET || undefined;
+  if (googleClientSecret === undefined) {
+    problems.push('GOOGLE_CLIENT_SECRET must be set');
+  }
+
   // The undefined checks let TypeScript see that every value is defined below.
   if (
     problems.length > 0 ||
     nodeEnv === undefined ||
     port === undefined ||
     publicUrl === undefined ||
-    googleCloudProject === undefined
+    googleCloudProject === undefined ||
+    allowedEmail === undefined ||
+    googleClientId === undefined ||
+    googleClientSecret === undefined
   ) {
     throw new ConfigError(`Invalid configuration:\n${problems.map((p) => `- ${p}`).join('\n')}`);
   }
-  return { nodeEnv, port, publicUrl, googleCloudProject, firestoreEmulatorHost };
+  return {
+    nodeEnv,
+    port,
+    publicUrl,
+    googleCloudProject,
+    firestoreEmulatorHost,
+    allowedEmail,
+    googleClientId,
+    googleClientSecret,
+  };
 }

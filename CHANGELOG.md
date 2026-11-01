@@ -10,3 +10,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The app is deployed to Google Cloud Run at <https://brain-955911433585.europe-west1.run.app>.
+- Sign in with Google: only the owner's account gets in, and a sign-in keeps that device signed in
+  for 15 days without signing out other devices. Signed-out visitors are sent to the sign-in page.
