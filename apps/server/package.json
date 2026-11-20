@@ -18,9 +18,9 @@
   },
   "dependencies": {
     "@brain/shared": "*",
-    "@google-cloud/firestore": "^9.4.0",
+    "@google-cloud/firestore": "^9.4.1",
     "cookie-parser": "^1.4.7",
     "express": "^5.3.0",
-    "google-auth-library": "^11.3.2"
+    "google-auth-library": "^11.3.4"
   }
 }
